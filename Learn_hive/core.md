@@ -10,3 +10,7 @@
 3. 使用map join 代替 common join. 可以set hive.auto.convert.join = true
 4. 设置 hive.optimize.skewjoin = true 来解决数据倾斜问题
 ```
+
+[shell命令执行hive脚本](https://blog.csdn.net/longshenlmj/article/details/50542683)
+
+[Hive常用字符串函数](https://www.iteblog.com/archives/1639.html)
