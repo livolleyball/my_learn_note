@@ -24,3 +24,17 @@ bar
 select regexp_extract('foothebar', 'foo(.*?)(bar)', 0) fromiteblog;
 foothebar
 ```
+
+```sql
+hive -e "show databases"
+hive -S -e "show databases"
+hive -S -e "show databases" > /tmp/myquery_result
+
+export HIVE_SKIP_SPARK_ASSEMBLY=true  --设置HIVE_SKIP_SPARK_ASSEMBLY，过滤掉WARN: Please slf4j
+
+hive -S -e "set" | grep warehouse   --查询 warehouse 的属性
+hive -f /path/to/file/withqueries.hql
+
+set hive.cli.print.header=true;   -- 打印列名
+select * from mytb limit 10;
+```
