@@ -16,3 +16,11 @@ CREATE TEMPORARY MACRO macro_daydiff (in_day_1 int,in_day_2 int)
  ,from_unixtime(unix_timestamp(cast(in_day_2 as string),'yyyyMMdd'),'yyyy-MM-dd'))
 ,null);
 ```
+```sql
+DROP TEMPORARY MACRO IF EXISTS macro_daydiff_pow;
+CREATE TEMPORARY MACRO macro_daydiff_pow (in_day_1 int,in_day_2 int, a DOUBLE)
+    if(in_day_1 is not null and in_day_2 is not null ,pow(a,hive_udf.daydiff(in_day_1,in_day_2))
+,null);
+
+select macro_daydiff_pow(20180804,20180804,0.99)
+```
