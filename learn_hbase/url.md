@@ -15,3 +15,4 @@
 ```
 [HBase 列族数据库](https://blog.csdn.net/u013378306/article/details/52442654)
 [HBase官方文档](https://www.w3cschool.cn/hbase_doc/)
+[Hbase数据库](http://www.cnblogs.com/xuzimian/p/9497605.html)
