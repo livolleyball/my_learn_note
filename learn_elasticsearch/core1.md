@@ -1,3 +1,10 @@
+```
+curl -XGET  'http://192.168.198.89:9205/_cat/indices?v&index=index_name*'
+
+curl -XGET 'http://192.168.198.89:9205/van-gogh-driver-2018.08.31/_search?pretty' -d '{"_source": "user_id"}'
+
+```
+
 查询
 ``` java
 GET _search
