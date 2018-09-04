@@ -48,3 +48,12 @@ def pa(args: String) = {
   args.foreach(arg => println(arg))
 }
 ```
+
+05
+``` scala
+var greetStrings =new Array
+
+
+
+
+```

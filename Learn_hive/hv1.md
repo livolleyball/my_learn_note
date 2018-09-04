@@ -1,5 +1,5 @@
 #### hadoop fs
-``` 
+```
 [-appendToFile <localsrc> ... <dst>]
 [-cat [-ignoreCrc] <src> ...]
 [-checksum <src> ...]
@@ -79,6 +79,12 @@ hadoop fs -rm -r -skipTrash 永久删除
 ```sql
 select regexp_extract('["merchantTag","3"],["ptId","100010820210"]','(merchantTag",")(.*?)("])',2)
 from (select  0) t limit 1;
+
+select
+regexp_extract('foothebar', 'foo(.*?)(bar)', 1),       -- the
+regexp_extract('foothebarfoothebar', 'foo(.*?)(bar)', 1)  -- the    匹配第一次出现的
+     from (select 0 ) a
+
 ```
 
 ```sql
@@ -137,7 +143,7 @@ from oth_tb ;
 ```
 ## 查询
 ```sql
-set hive.map.aggr=true;   -- 提高聚合性能；需要更多内存
+
 
 select stack(2,col1,col2) from mytb; -- col1 col2 数据类型需一致
 
@@ -145,4 +151,5 @@ set hive.exec.mode.local.auto = true; -- 本地执行模式
 
 set hive.auto.convert.join=true;     -- map的时候将小表完全放到内存中
 -- 设置mapjoin 优化时，小表的大小（单位字节），但是right outer join 和 full join 不支持这个优化
-set hive.mapjoin.smalltable.filesize=25000000;  
+set hive.mapjoin.smalltable.filesize=25000000;
+set hive.map.aggr=true;   -- 提高聚合性能；需要更多内存
