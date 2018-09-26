@@ -1,0 +1,8 @@
+'.source.shell':
+curl XGET 'http://192.168.198.89:9205/lihm20180731/test/_count'
+
+curl -XPOST 'http://192.168.198.89:9205/lihm20180731/test/_delete_by_query?conflicts=proceed' -d '{
+  "query": {
+    "match_all": {}
+  }
+}'

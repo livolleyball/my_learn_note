@@ -132,3 +132,4 @@ add2(3)  // 返回 5
 
 ## 柯里化函数
 ``` Scala
+def multipy(m :Int)(n :Int): Int = m* n
