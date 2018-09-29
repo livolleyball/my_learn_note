@@ -24,3 +24,14 @@ CREATE TEMPORARY MACRO macro_daydiff_pow (in_day_1 int,in_day_2 int, a DOUBLE)
 
 select macro_daydiff_pow(20180804,20180804,0.99)
 ```
+#### date to day
+``` sql
+DROP TEMPORARY MACRO IF EXISTS macro_date_to_day;
+CREATE TEMPORARY MACRO macro_date_to_day (in_date string)
+    if(in_date is not null  ,
+ cast(from_unixtime(unix_timestamp(cast(in_date as string),'yyyy-MM-dd'),'yyyyMMdd') as int)
+ -- regexp_replace(substr(in_date,1,10),"-","")
+,0);
+
+select macro_date_to_day('2018-09-10')=20180910;
+```
