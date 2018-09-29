@@ -68,7 +68,7 @@ GET van-gogh-driver-2018.07.02/_search
     ]
 }
 
-## not and 
+## not and
 GET van-gogh-driver-2018.07.02/_search
 {
   "query": {
@@ -121,7 +121,18 @@ GET van-gogh-driver-2018.07.02/_search
 }
 ```
 * ### Aggregations
-*
+``` javascript
+
+GET index_name/type_name/_search
+{
+  "aggs": {
+    "all_key": {
+      "terms": { "field": "import_key" }  // fielddata = true 的字段
+    }
+  },
+  "size": 0
+}
+```
 
 
 
