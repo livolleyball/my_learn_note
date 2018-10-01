@@ -1,5 +1,5 @@
 # 新建会话
-```
+```python
 from pyspark import SparkContext
 import  math
 
@@ -11,7 +11,7 @@ str(sc.sparkUser())
 sc.appName
 ```
 # loading data 载入数据
-```
+```python
 rdd = sc.parallelize([('a', 7), ('a', 2), ('b', 2)])
 rdd2 = sc.parallelize([('a', 2), ('d', 2), ('b', 2)])
 rdd3 = sc.parallelize(range(100))
@@ -25,7 +25,7 @@ rdd7=sc.parallelize(range(5))
 ```
 
 # baseic Information  基本信息
-```
+```python
 rdd.getNumPartitions()  # RDD 实例的分区数
 rdd.count()  # RDD 实例的数量
 rdd.countByKey()  # 按 RDD 的key 计数
@@ -37,7 +37,7 @@ rdd3.glom().collect()  #查看分区状况
 ```
 
 # summary 总结
-```
+```python
 rdd3.count()
 rdd3.max()
 rdd3.min()
@@ -49,7 +49,7 @@ rdd3.stats()
 ```
 
 # applying Function  函数
-```
+```python
 rdd.map(lambda x: x + (x[1] * 3, x[0])).collect()  # 将func 作用于每个元素
 rdd3.map(lambda x:x*x).collect()
 
@@ -67,20 +67,20 @@ rdd.top(2)
 ```
 
 ## sampling
-```
+```python
 rdd3.sample(False, 0.15, 50).collect()  # 随机取样，seed=50
 len(rdd3.sample(False, 0.15, 50).collect())
 ```
 
 ## filtering 过滤
-```
+```python
 rdd.filter(lambda x: "a" in x).collect()  # 过滤
 rdd5.distinct().collect()  # 返回唯一值
 rdd.keys().collect()  # 返回(k,v) RDD 的keys
 ```
 
 # iterating 迭代
-```
+```python
 def g(x): print(x)     # 定义一个函数
 def g1(x): print((x[1]+1000,x[0]))
 
@@ -89,7 +89,7 @@ rdd.foreach(g1)
 ```
 # 重置数据
 ## reducing 规约
-```
+```python
 rdd.reduceByKey(lambda x,y:x+y).collect()   # 合并RDD元素中对应的值 ,针对每一个key , 将x+y 应用到对应的value 上
 ## [('a', 14), ('b', 2)]
 
@@ -103,7 +103,7 @@ rdd7.reduce(lambda x,y:x+y)
 rdd7.filter(lambda x:x!=0).reduce(lambda x,y:x*y)
 ```
 ## grouping by   分组
-```
+```python
 rdd3.groupBy(lambda x:x%2).mapValues(list).collect()
 
 rdd = sc.parallelize([('a', 7), ('a', 7), ('b', 2)])
@@ -113,7 +113,7 @@ rdd.groupByKey().mapValues(list).collect()      #  [('a', [7, 7]), ('b', [2])]
 rdd.groupByKey().mapValues(bytearray).collect() # [('a', bytearray(b'\x07\x07')), ('b', bytearray(b'\x02'))]
 ```
 ## aggregating   聚合
-```
+```python
 seqOp =(lambda x,y:(x[0]+y,x[1]+1))
 combOp=(lambda x,y:(x[0]+y[0],x[1]+y[1]))
 
@@ -130,12 +130,12 @@ rdd7.keyBy(lambda x:x+x).collect()
 rdd.keyBy(lambda x:x).collect()  # [(('a', 7), ('a', 7)), (('a', 7), ('a', 7)), (('b', 2), ('b', 2))]
 ```
 # 数学运算
-```
+```python
 rdd.subtract(rdd2).collect()   # 返回排除 rrd2 后元素  [('a', 7)]
 rdd2.subtract(rdd).collect()   # 返回 RRD 中不存在的 key
 ```
 # 排序
-```
+```python
 rdd2.sortBy(lambda x:x[1],ascending=True).collect()  # 按指定的函数排序
 rdd7.sortBy(lambda x:x,ascending=False).collect()
 rdd.sortByKey().collect()    #  按RDD 的 key 排序
@@ -159,21 +159,20 @@ rdd8.filter(lambda x: not [x % i for i in range(2, int(math.sqrt(x)) + 1) if x %
 ```
 
 # 重新分区 repartitions
-```
+```python
 rdd.getNumPartitions()
 rdd.repartition(4)  # 重新分成4个分区
 rdd.coalesce(1)     # 将分区数减为1
 ```
 
-
 # 保存
-```
+```python
 rdd.saveAsTextFile('dir')
 rdd.saveAsHadoopFile("hdfs://namenodehost/parent/child",
                          'org.apache.hadoop.mapred.TextOutputFormat')
 ```
 
 # 停止会话
-```
+```python
 sc.stop()
 ```

@@ -70,4 +70,28 @@ POST my_index_0/my_child/2/_update?routing=2&refresh
 }
 
 GET my_index_0/my_child/_search
+
+// 注意 参数 parent
+POST my_index_0/my_child/131/_update?parent=2&routing=2&refresh
+{
+  "scripted_upsert":true,
+    "script" : {
+       "inline": "ctx._source.tag_id.add(\"b\")"
+    },
+    "upsert" : {
+        "tag_id" :["a"]
+    }
+}
+
+
+
+POST lihm_index/my_parent/44/_update?refresh
+{"scripted_upsert":true,
+    "script" : {
+       "inline": "ctx._source.tag_id.add(\"10\")"
+    },
+    "upsert" : {
+        "tag_id" : ["23"]
+    }
+}
 ```
