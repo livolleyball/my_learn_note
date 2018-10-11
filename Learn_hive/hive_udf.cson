@@ -1,0 +1,137 @@
+'.source.SQL':
+hive_udf.castarray 将array 中的值转换成指定的基础数据类型
+select sort_array(hive_udf.castarray(split(truck_length,','),'double'))[0];
+
+hive_udf.arrayintersect
+-- 交集自带去重
+-- 针对 array<struct> 有缺陷。 只适合于简单的array,int ,string;
+select arrayintersect(a,b) from (
+select split('a,b,c,d',',') as a, split('b,c,d,e,b',',') as b from dim.dim_city limit 1) AA
+
+
+hive_udf.collect_where
+ _FUNC_(value, condition) - aggregate the values which satisfy the condition into an array
+
+select collect_where(id,prov_id=110000)
+,collect_where(id,prov_id=120000)
+,collect_where(id,prov_id=130000)
+from (
+select id,prov_id from dim.dim_city where deep in (1,2) and id >=110000 and id <150000
+) A
+
+hive_udf.count_where
+# Compute a COUNT of row items in which a condition is true;
+# "true" means "not false and also not null."
+# This sounds like it is the same as COUNT(1) with a WHERE or GROUP BY, but
+# it allows for multiple columns to be tracked separately within a single
+# aggregation. This is faster and cleaner than
+# SUM(CAST(example = foo AS INT)), and also appropriately returns zero
+# when the item in question is NULL, unlike COUNT(1) which doesn't know what
+# is and isn't NULL.
+select count_where(prov_id=110000),count_where(prov_id=120000),count_where(prov_id=130000) from (
+select id,prov_id from dim.dim_city where deep in (1,2) and id >=110000 and id <150000
+) A
+
+hive_udf.combine_unique
+
+# Aggregate function to combine several lists together to return a list of unique values
+select type,hive_udf.combine_unique(aa) from (
+select split('a,b,d',',') aa ,1 type from dim.dim_city limit 1
+union all
+select split('a,b,c',',') aa,1 type from dim.dim_city limit 1) AA
+group by type;
+
+select hive_udf.combine_unique(split('a,b,d,a',',') )
+from dim.dim_city limit 1
+– ["d","b","a"]
+
+hive_udf.sum_where
+# Compute the SUM of row items for which a condition is true;
+# "true" means "not false and also not null."
+select sum_where(id,prov_id=110000),collect_where(id,prov_id=120000),count_where(prov_id=130000) from (
+select id,prov_id from dim.dim_city where deep in (1,2) and id >=110000 and id <150000
+) A
+
+-- double
+
+hive_udf.udaf_to_order_map
+
+select prov_id,hive_udf.udaf_to_order_map(name,id) map_set
+from
+dim.dim_city where id>=1 and id <200000
+group by prov_id
+
+return
+110000 {"东城区":110101,"丰台区":110106,"北京市":110100,"大兴区":110115,"宣武区":110104}
+
+
+
+hive_udf.map_remove_keys
+select map('a',4,'b',5,'c',4),hive_udf.map_remove_keys(map('a',4,'b',5,'c',4),array('a'))
+
+return
+ {"a":4,"b":5,"c":4} {"b":5,"c":4}
+
+
+hive_udf.json_as_map
+
+select id,hive_udf.json_as_map(k)["a"]
+from
+(
+select id,hive_udf.json_as_array('[{"a":1},{"a":2}]') as json_as_array from dim.dim_city limit 4
+)t
+lateral view explode(json_as_array) tf as k;
+
+
+
+hive_udf.json_to_map
+select hive_udf.json_to_map ('{"a":4,"b":5,"c":4}')['a']
+
+select id,k,v
+from
+(
+select id,'{"a":4,"b":5,"c":4}' map_json
+from dim.dim_city limit 1
+)t
+lateral view explode(hive_udf.json_as_map (map_json)) tf as k,v;
+
+
+hive_udf.json_as_map
+select hive_udf.json_as_map ("{'a':4,'b':5,'c':4}")['a']
+select hive_udf.json_as_map ('{"a":4,"b":5,"c":4}')['a']
+
+select id,k,v
+from
+(
+select id,'{"a":4,"b":5,"c":4}' map_json
+from dim.dim_city limit 1
+)t
+lateral view explode(hive_udf.json_as_map (map_json)) tf as k,v;
+
+
+
+hive_udf.daydiff
+select hive_udf.daydiff(20180525,20180504) from dim.dim_city limit 1；
+
+hive_udf.arrayunion
+select hive_udf.arrayunion(split('a,b,d',',') ,split('a,b,c',',')) from dim.dim_city limit 1;
+
+return ["d","b","c","a"]
+
+select concat_ws(',',hive_udf.arrayunion(split('a,b,d',',') ,split('a,b,c',','))) from dim.dim_city limit 1;
+
+return  a,b,c,d
+
+
+
+
+hive_udf.udtf_explode_map
+select hive_udf.udtf_explode_map(hive_udf.json_as_map ("{'a':4,'b':5,'c':4}") )
+
+
+
+group_longest
+select group_longest(short_name),group_longest(area)
+from ( select area,short_name from dim.dim_city where deep in (1,2) and id >=110000 and id <150000) AA
+
+-- bug 当string 长度一致时，返回其中一个
