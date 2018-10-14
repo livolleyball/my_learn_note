@@ -30,7 +30,7 @@ put't1','row2','f1:a','2'
 put't1','row1','f2:c','3'
 put't1','row2','f2:c','4'
 
-
+[](https://blog.csdn.net/u014034934/article/details/74330848)
 1.RowFilter ：基于行键来过滤数据；
 	RowFilter
 	根据rowkey的值过滤
