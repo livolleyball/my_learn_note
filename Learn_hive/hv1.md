@@ -144,7 +144,6 @@ from oth_tb ;
 ## 查询
 ```sql
 
-
 select stack(2,col1,col2) from mytb; -- col1 col2 数据类型需一致
 
 set hive.exec.mode.local.auto = true; -- 本地执行模式
@@ -153,3 +152,4 @@ set hive.auto.convert.join=true;     -- map的时候将小表完全放到内存�
 -- 设置mapjoin 优化时，小表的大小（单位字节），但是right outer join 和 full join 不支持这个优化
 set hive.mapjoin.smalltable.filesize=25000000;
 set hive.map.aggr=true;   -- 提高聚合性能；需要更多内存
+```
