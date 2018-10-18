@@ -5,6 +5,7 @@ basic 应用必知必会
 
 * hive
 * hbase
+![avatar](/learn_hbase/hbase.png)
 * scala
 * pyspark
 * elasticsearch
