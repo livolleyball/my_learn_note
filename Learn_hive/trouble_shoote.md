@@ -24,6 +24,7 @@ FAILED: SemanticException [Error 10022]: DISTINCT on different columns not suppo
 set hive.groupby.skewindata=true;  -- 避免因数据倾斜造成的计算效率问题
 这个参数 不支持 对多列进行 count(DISTINCT columns)
 
+
 set hive.groupby.skewindata=true;
 select count(distinct prov_id),
 count(distinct deep)
@@ -88,3 +89,38 @@ ON a.id = b.id
 表B 中如果 table2 数据较少， left join 会在  >  两边存在 null 的可能性，导致统计出错。
 
 ```
+
+```SQL
+--------------------------  mapjoin -------------------------------------------
+-- deprecated as of Hive v0.7
+SELECT /*+ MAPJOIN(d) */ s.ymd, s.symbol, s.price_close, d.dividend
+FROM stocks s JOIN dividends d
+ON s.ymd = d.ymd AND s.symbol = d.symbol WHERE s.symbol = 'AAPL';
+
+
+set hive.auto.convert.join=true;
+SELECT s.ymd, s.symbol, s.price_close, d.dividend
+FROM stocks s JOIN dividends d ON s.ymd = d.ymd AND s.symbol = d.symbol > WHERE s.symbol = 'AAPL';
+```
+
+```SQL
+------------------------- 数据倾斜参数优化  ----------------------------------
+SET hive.map.aggr=true;
+会触发在map阶段的 “顶级” 聚合过程。
+非顶级聚合过程将会在执行一个 group by 之后进行。
+启动方式一：(自动判断）
+set.hive.auto.convert.join=true;
+hive.mapjoin.smalltable.filesize 默认值是25mb
+小表小于25mb自动启动mapjoin
+启动方式二：(手动）
+select /*+mapjoin(A)*/ f.a,f.b from A t join B f on (f.a=t.a)
+
+
+mapjoin支持不等值条件
+reducejoin不支持在ON条件中不等值判断
+
+hive.optimize.skewjoin=true;
+如果是join过程出现倾斜，应该设置为true
+set hive.skewjoin.key=100000;
+这个是join的键对应的记录条数超过这个值则会进行优化
+简单说就是一个job变为两个job执行HQL
