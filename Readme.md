@@ -4,6 +4,8 @@ core 主要包括底层原理
 basic 应用必知必会
 
 * hive
+ * [hive 优化](/Learn_hive/hive优化.md)
+ * [hive udf](/Learn_hive/hive_udf.cson)
 * hbase
 ![avatar](/learn_hbase/hbase.png)
 * scala
