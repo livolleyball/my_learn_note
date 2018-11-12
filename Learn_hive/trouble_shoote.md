@@ -124,3 +124,4 @@ hive.optimize.skewjoin=true;
 set hive.skewjoin.key=100000;
 这个是join的键对应的记录条数超过这个值则会进行优化
 简单说就是一个job变为两个job执行HQL
+```

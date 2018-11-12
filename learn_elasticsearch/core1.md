@@ -293,6 +293,7 @@ POST /my_index_name/_forcemerge
 
 集群 节点信息
 ```
+GET _cat/allocation?v
 GET /_cluster/health?pretty
 GET /_cluster/health?wait_for_status=yellow&timeout=50s
 GET /_cluster/state

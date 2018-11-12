@@ -133,5 +133,29 @@ select hive_udf.udtf_explode_map(hive_udf.json_as_map ("{'a':4,'b':5,'c':4}") )
 group_longest
 select group_longest(short_name),group_longest(area)
 from ( select area,short_name from dim.dim_city where deep in (1,2) and id >=110000 and id <150000) AA
-
 -- bug 当string 长度一致时，返回其中一个
+
+select "dwd.web_log_monitor_delta_daily_hourly"
+,$date
+,collect_set(cast(t1.col as string))
+from
+
+(select day,hour
+from dwd.web_log_monitor_delta_daily_hourly
+where day=20181031
+group by day, hour ) t
+full join (select explode(array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23)) as col ) t1
+on t.hour = t1.col
+where t.hour is null
+group by "dwd.web_log_monitor_delta_daily_hourly",
+$date;
+
+--
+select * from (
+select tf.col from (select 0) t lateral view explode(array('A','B','C')) tf as col ) A
+where array_contains(Array('A','b'),col) = TRUE
+
+hive_udf.pmax -- 返回行中最大值 DOUBLE
+select hive_udf.pmax(1,6,'a') from (select 0 ) A -- 6
+select hive_udf.pmax('a')   -- null
+select sort_array(array(1,'',' ','汉字',null,'null'))  from from (select 0 ) A  -- [null,""," ","1","null","汉子"]
