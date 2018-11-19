@@ -12,3 +12,4 @@ basic 应用必知必会
 * scala
 * pyspark
 * elasticsearch
+  * [go_mysql_es](/learn_elasticsearch/go_mysql_es.md)

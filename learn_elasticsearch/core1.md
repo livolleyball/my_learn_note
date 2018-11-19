@@ -116,6 +116,7 @@ PUT /my_index_name
     "number_of_shards": 3, -- 分片数
     "analysis": {},
     "refresh_interval": "1s"  -- 刷新频率
+    "index.mapping.total_fields.limit": 1000  -- 映射字段个数 默认是1000
   },
   "mappings": {
     "my_type_name": {    -- type 名

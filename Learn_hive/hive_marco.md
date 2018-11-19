@@ -41,6 +41,6 @@ select macro_date_to_day('2018-09-10')=20180910;
 ``` sql
 DROP TEMPORARY MACRO IF EXISTS macro_nvl_enum;
 CREATE TEMPORARY MACRO macro_nvl_enum (in_column string)
-  if(in_column is null or in_column ='' or in_column ='null' or in_column ='NULL','未知', in_column));
-  
+  if(in_column is null or in_column ='' or in_column ='null' or in_column ='NULL','未知', in_column);
+
 ```

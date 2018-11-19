@@ -158,4 +158,6 @@ where array_contains(Array('A','b'),col) = TRUE
 hive_udf.pmax -- 返回行中最大值 DOUBLE
 select hive_udf.pmax(1,6,'a') from (select 0 ) A -- 6
 select hive_udf.pmax('a')   -- null
-select sort_array(array(1,'',' ','汉字',null,'null'))  from from (select 0 ) A  -- [null,""," ","1","null","汉子"]
+select sort_array(array(1,'',' ','汉字',null,'null'))  from from (select 0 ) A
+WHERE sort_array(array(1,'',' ','汉字',null,'null'))[0] is null
+  -- [null,""," ","1","null","汉子"]
