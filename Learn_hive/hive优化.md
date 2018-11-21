@@ -202,3 +202,10 @@ perReducer=hive.exec.reducers.bytes.per.reducer
 set mapred.queue.name=queue3;设置队列queue3
 set mapred.job.queue.name=queue3;设置使用queue3
 set mapred.job.priority=HIGH；
+
+
+九 数据倾斜
+ 涉及数据倾斜的话，主要是reduce中数据倾斜的问题，可能通过设置hive中reduce的并行数，reduce的内存大小单位为m，reduce中 shuffle的刷磁盘的比例，来解决。
+SET mapred.reduce.tasks=50;
+SET mapreduce.reduce.memory.mb=6000;
+SET mapreduce.reduce.shuffle.memory.limit.percent=0.06;

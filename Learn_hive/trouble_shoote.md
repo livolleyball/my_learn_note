@@ -125,3 +125,31 @@ set hive.skewjoin.key=100000;
 这个是join的键对应的记录条数超过这个值则会进行优化
 简单说就是一个job变为两个job执行HQL
 ```
+
+``` sql
+------------------------- 分区问题  ----------------------------------
+create table tmp.lihm_20181118
+(id bigint comment 'id')
+comment 'a'
+partitioned by (day int,hour int);
+
+insert overwrite table tmp.lihm_20181118 partition (day =20181118,hour =12)
+select id from dim.dim_city where name ='a'; -- 没有 name等于‘a’的数据
+
+select day,hour from tmp.lihm_20181118 group by day,hour;
+return
+20181118,12
+
+select day,hour,count(1) from tmp.lihm_20181118 group by day,hour;
+return
+0 rows；
+
+select day,count(distinct hour),count(1) from tmp.lihm_20181118 group by day;
+select day,count(distinct hour),count(*) from tmp.lihm_20181118 group by day;
+return
+0 results
+
+select day,count(distinct hour) from tmp.lihm_20181118 group by day
+return
+20181118,1
+```
