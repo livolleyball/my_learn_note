@@ -19,6 +19,18 @@ group by date(create_time)
 ```
 
 ```sql
+--------------     Hive 分区表新增字段或者修改字段类型等不生效       ---------------------------
+标题比较笼统，实际情况是： 
+对于Hive 的分区外部表的已有分区，在对表新增或者修改字段后，相关分区不生效。
+
+原因是：表元数据虽然修改成功，但是分区也会对应列的元数据，这个地方不会随表的元数据修改而修改.
+处理办法：
+有两种
+第一种：修改表，然后对于需要生效的分区，先drop 再 add. （或者说：先drop 表在重新建表再添加分区）
+第二种：修改表，对需要生效的分区也执行添加或者修改字段的操作，比如：alter table tablename partition(year='2017') add columns(name STRING );
+```
+
+```sql
 FAILED: SemanticException [Error 10022]: DISTINCT on different columns not supported with skew in data
 
 set hive.groupby.skewindata=true;  -- 避免因数据倾斜造成的计算效率问题
@@ -153,3 +165,4 @@ select day,count(distinct hour) from tmp.lihm_20181118 group by day
 return
 20181118,1
 ```
+

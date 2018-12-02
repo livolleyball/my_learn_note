@@ -1,0 +1,459 @@
+
+rename checkstyle-suppressions.xml.bak checkstyle-suppressions.xml 
+mv checkstyle-suppressions.xml checkstyle-suppressions.xml.bak
+mv checkstyle-result.xml  checkstyle-result.xml.bak
+
+hadoop conf
+
+
+
+# export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre/
+
+
+# export HIVE_HOME=/var/hadoop/setup/apache-hive-1.1.0-cdh5.7.2-bin
+export HIVE_HOME=/opt/cloudera/parcels/CDH-5.13.1-1.cdh5.13.1.p0.2/bin/../lib/hive 
+
+export HADOOP_INSTALL=/var/hadoop/setup/hadoop-2.6.0-cdh5.7.2
+
+# export HADOOP_CONF_DIR=$HADOOP_INSTALL/etc/hadoop
+
+# export SPARK_HOME=/var/hadoop/setup/spark-2.3.1-bin-hadoop2.7
+env:SPARK_HOME=/opt/cloudera/parcels/CDH-5.13.1-1.cdh5.13.1.p0.2/lib/spark
+export SPARK_INSTALL=$SPARK_HOME
+export SPARK_CONF_DIR=$SPARK_HOME/conf
+export PATH=$JAVA_HOME/bin:$HIVE_HOME/bin:$HADOOP_HOME/bin:$SPARK_INSTALL/bin:$PATH
+
+-- 已有
+JAVA_HOME=/home/ymmapp/java/jdk1.8.0_131/
+HADOOP_HOME=/opt/cloudera/parcels/CDH/lib/hadoop
+HADOOP_CONF_DIR=/etc/hadoop/conf
+
+
+
+./run_hoodie_app.sh --help
+
+
+## 安装Kafka 
+A CA file has been bootstrapped using certificates from the SystemRoots
+keychain. To add additional certificates (e.g. the certificates added in
+the System keychain), place .pem files in
+  /usr/local/etc/openssl/certs
+
+and run
+  /usr/local/opt/openssl/bin/c_rehash
+
+openssl is keg-only, which means it was not symlinked into /usr/local,
+because Apple has deprecated use of OpenSSL in favorof its own TLS and crypto libraries.
+
+If you need to have openssl first in your PATH run: 
+  echo 'export PATH="/usr/local/opt/openssl/bin:$PATH"' >> ~/.bash_profile
+
+For compilers to find openssl you may need to set:
+  export LDFLAGS="-L/usr/local/opt/openssl/lib"
+  export CPPFLAGS="-I/usr/local/opt/openssl/include"
+
+For pkg-config to find openssl you may need to set:
+  export PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig"
+
+127.0.0.1 adhoc-1
+   127.0.0.1 adhoc-2
+   127.0.0.1 namenode
+   127.0.0.1 datanode1
+   127.0.0.1 hiveserver
+   127.0.0.1 hivemetastore
+   127.0.0.1 kafkabroker
+   127.0.0.1 sparkmaster
+   127.0.0.1 zookeeper
+
+git clone https://github.com/uber/hudi.git
+
+brew install kafkacat 
+#  Generic command line non-JVM Apache Kafka producer and consumer
+mvn package -DskipTests
+
+
+cd docker
+./setup_demo.sh
+cat docker/demo/data/batch_1.json
+
+ cat docker/demo/data/batch_1.json | kafkacat -b kafkabroker -t stock_ticks -P
+
+  kafkacat -b kafkabroker -L -J 
+
+虽然随着时间的推移，我们能够对分区的数量进行添加，但是对于基于Key来生成的这一类消息需要我们重点关注。
+当producer向kafka写入基于key的消息时，kafka通过key的hash值来确定消息需要写入哪个具体的分区。
+通过这样的方案，kafka能够确保相同key值的数据可以写入同一个partition。
+kafka的这一能力对于一部分应用是极为重要的，例如对于同一个key的所有消息，consumer需要按消息的顺序进行有序消费。
+如果partition的数量发生改变，那么上面的有序性保证将不复存在。为了避免上述情况发生，通常的解决办法是多分配一些分区，
+以满足未来的需求。通常情况下，我们需要根据未来1到2年的目标吞吐量来设计kafka的分区数量。
+
+# Run the following spark-submit command to execute the delta-streamer and ingest to stock_ticks_mor dataset in HDFS
+spark-submit 
+--class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE 
+--storage-type MERGE_ON_READ 
+--source-class com.uber.hoodie.utilities.sources.JsonKafkaSource 
+--source-ordering-field ts  
+--target-base-path /user/hive/warehouse/stock_ticks
+
+
+    /var/hoodie/ws/hoodie-hive/run_sync_tool.sh  --jdbc-url jdbc:hive2://hiveserver:10000 --user hive --pass hive --partitioned-by dt --base-path /user/hive/warehouse/stock_ticks_cow --database default --table stock_ticks_cow
+
+
+# Now run hive-sync for the second data-set in HDFS using Merge-On-Read (MOR storage)
+/var/hoodie/ws/hoodie-hive/run_sync_tool.sh  \
+--jdbc-url jdbc:hive2://hiveserver:10000 \
+--user hive --pass hive \
+--partitioned-by dt \
+--base-path /user/hive/warehouse/stock_ticks_mor \
+--database default \
+--table stock_ticks_mor
+
+
+stock_ticks_mor  与 stock_ticks_mor_rt 指向一个共同的 location
+
+docker exec -it adhoc-2 /bin/bash
+beeline -u jdbc:hive2://hiveserver:10000 --hiveconf hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat --hiveconf hive.stats.autogather=false
+
+show partitions stock_ticks_mor_rt;
+
+select `_hoodie_commit_time`, symbol, ts, volume, open, close  from stock_ticks_cow where  symbol = 'GOOG';
+
++----------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201192234       | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5     | 1230.02   |
+| 20181201192234       | GOOG    | 2018-08-31 10:29:00  | 3391    | 1230.1899  | 1230.085  |
++----------------------+---------+----------------------+---------+------------+-----------+--+
+
+select symbol, max(ts) from stock_ticks_cow group by symbol HAVING symbol = 'GOOG';
+
++---------+----------------------+--+
+| symbol  |         _c1          |
++---------+----------------------+--+
+| GOOG    | 2018-08-31 10:29:00  |
++---------+----------------------+--+
+
+select `_hoodie_commit_time`, symbol, ts, volume, open, close  from stock_ticks_cow where  symbol = 'GOOG';
+
+select * from stock_ticks_cow where  symbol = 'GOOG';
+select count(volume),count(distinct volume) from stock_ticks_cow;
+select count(key),count(distinct key) from stock_ticks_cow;
+select * from stock_ticks_cow ;
+describe stock_ticks_cow
+
+select symbol, max(ts) from stock_ticks_mor group by symbol HAVING symbol = 'GOOG';
++---------+----------------------+--+
+| symbol  |         _c1          |
++---------+----------------------+--+
+| GOOG    | 2018-08-31 10:29:00  |
++---------+----------------------+--+
+
+ select symbol, max(ts) from stock_ticks_mor_rt group by symbol HAVING symbol = 'GOOG';
+ +---------+----------------------+--+
+| symbol  |         _c1          |
++---------+----------------------+--+
+| GOOG    | 2018-08-31 10:29:00  |
++---------+----------------------+--+
+
+
+
+select `_hoodie_commit_time`, symbol, ts, volume, open, close  from stock_ticks_mor where  symbol = 'GOOG';
++----------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201193018       | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5     | 1230.02   |
+| 20181201193018       | GOOG    | 2018-08-31 10:29:00  | 3391    | 1230.1899  | 1230.085  |
++----------------------+---------+----------------------+---------+------------+-----------+--+
+
+select `_hoodie_commit_time`, key,symbol, ts, volume, open, close  from stock_ticks_mor_rt where  symbol = 'GOOG';
++----------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201193018       | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5     | 1230.02   |
+| 20181201193018       | GOOG    | 2018-08-31 10:29:00  | 3391    | 1230.1899  | 1230.085  |
++----------------------+---------+----------------------+---------+------------+-----------+--+
+
+
+docker exec -it adhoc-1 /bin/bash
+$SPARK_INSTALL/bin/spark-shell 
+--jars $HUDI_SPARK_BUNDLE 
+--master local[2] 
+--driver-class-path $HADOOP_CONF_DIR 
+--conf spark.sql.hive.convertMetastoreParquet=false 
+--deploy-mode client  
+--driver-memory 1G 
+--executor-memory 3G 
+--num-executors 1  
+--packages com.databricks:spark-avro_2.11:4.0.0
+
+
+spark.sql("show tables").show(100, false)
++--------+------------------+-----------+
+|database|tableName         |isTemporary|
++--------+------------------+-----------+
+|default |stock_ticks_cow   |false      |
+|default |stock_ticks_mor   |false      |
+|default |stock_ticks_mor_rt|false      |
++--------+------------------+-----------+
+
+
+spark.sql("select `_hoodie_commit_time`, symbol, ts, volume, open, close  from stock_ticks_cow where  symbol = 'GOOG'").show(100, false)
++-------------------+------+-------------------+------+---------+--------+
+|_hoodie_commit_time|symbol|ts                 |volume|open     |close   |
++-------------------+------+-------------------+------+---------+--------+
+|20181201192234     |GOOG  |2018-08-31 09:59:00|6330  |1230.5   |1230.02 |
+|20181201192234     |GOOG  |2018-08-31 10:29:00|3391  |1230.1899|1230.085|
++-------------------+------+-------------------+------+---------+--------+
+
+spark.sql("select symbol, max(ts) from stock_ticks_mor group by symbol HAVING symbol = 'GOOG'").show(100, false)
++------+-------------------+
+|symbol|max(ts)            |
++------+-------------------+
+|GOOG  |2018-08-31 10:29:00|
++------+-------------------+
+
+ spark.sql("select symbol, max(ts) from stock_ticks_mor_rt group by symbol HAVING symbol = 'GOOG'").show(100, false)
+ +------+-------------------+
+|symbol|max(ts)            |
++------+-------------------+
+|GOOG  |2018-08-31 10:29:00|
++------+-------------------+
+
+spark.sql("select  `_hoodie_commit_time`, symbol, ts, volume, open, close   from stock_ticks_mor where symbol = 'GOOG'").show(100, false)
++-------------------+------+-------------------+------+---------+--------+
+|_hoodie_commit_time|symbol|ts                 |volume|open     |close   |
++-------------------+------+-------------------+------+---------+--------+
+|20181201193018     |GOOG  |2018-08-31 09:59:00|6330  |1230.5   |1230.02 |
+|20181201193018     |GOOG  |2018-08-31 10:29:00|3391  |1230.1899|1230.085|
++-------------------+------+-------------------+------+---------+--------+
+
+spark.sql("select `_hoodie_commit_time`, symbol, ts, volume, open, close  from stock_ticks_mor_rt where  symbol = 'GOOG'").show(100, false)
++-------------------+------+-------------------+------+---------+--------+
+|_hoodie_commit_time|symbol|ts                 |volume|open     |close   |
++-------------------+------+-------------------+------+---------+--------+
+|20181201193018     |GOOG  |2018-08-31 09:59:00|6330  |1230.5   |1230.02 |
+|20181201193018     |GOOG  |2018-08-31 10:29:00|3391  |1230.1899|1230.085|
++-------------------+------+-------------------+------+---------+--------+
+
+
+cat docker/demo/data/batch_2.json | kafkacat -b kafkabroker -t stock_ticks -P 
+docker exec -it adhoc-2 /bin/bash
+
+spark-submit 
+--class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE 
+--storage-type COPY_ON_WRITE --source-class com.uber.hoodie.utilities.sources.JsonKafkaSource 
+--source-ordering-field ts  
+--target-base-path /user/hive/warehouse/stock_ticks_cow 
+--target-table stock_ticks_cow 
+--props /var/demo/config/kafka-source.properties
+
+
+spark-submit 
+--class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE 
+--storage-type MERGE_ON_READ 
+--source-class com.uber.hoodie.utilities.sources.JsonKafkaSource
+--source-ordering-field ts  
+--target-base-path /user/hive/warehouse/stock_ticks_mor 
+--target-table stock_ticks_mor 
+--props /var/demo/config/kafka-source.properties
+
+
+With Copy-On-Write table, the second ingestion by DeltaStreamer resulted in a new version of Parquet file getting created.
+
+With Merge-On-Read table, the second ingestion merely appended the batch to an unmerged delta (log) file
+
+
+docker exec -it adhoc-2 /bin/bash
+beeline -u jdbc:hive2://hiveserver:10000 --hiveconf hive.input.format=org.apache.hadoop.hive.ql.io.HiveInputFormat --hiveconf hive.stats.autogather=false
+select symbol, max(ts) from stock_ticks_cow group by symbol HAVING symbol = 'GOOG';
+select `_hoodie_commit_time`, key, symbol, ts, volume, open, close  from stock_ticks_cow where  symbol = 'GOOG';
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  |         key         | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201192234       | GOOG_2018-08-31 09  | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5     | 1230.02   |
+| 20181201205539       | GOOG_2018-08-31 10  | GOOG    | 2018-08-31 10:59:00  | 9021    | 1227.1993  | 1227.215  |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+
+select count(key),count(distinct key),max(ts) from stock_ticks_cow;
++------+------+----------------------+--+
+| _c0  | _c1  |         _c2          |
++------+------+----------------------+--+
+| 197  | 197  | 2018-08-31 10:59:00  |
++------+------+----------------------+--+
+
+
+select `_hoodie_commit_time`, key, symbol, ts, volume, open, close  from stock_ticks_mor where  symbol = 'GOOG';
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  |         key         | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201193018       | GOOG_2018-08-31 09  | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5     | 1230.02   |
+| 20181201193018       | GOOG_2018-08-31 10  | GOOG    | 2018-08-31 10:29:00  | 3391    | 1230.1899  | 1230.085  |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+
+select count(key),count(distinct key),max(ts) from stock_ticks_mor;
++------+------+----------------------+--+
+| _c0  | _c1  |         _c2          |
++------+------+----------------------+--+
+| 197  | 197  | 2018-08-31 10:29:00  |
++------+------+----------------------+--+
+
+
+
+
+select `_hoodie_commit_time`, key, symbol, ts, volume, open, close  from stock_ticks_mor_rt where  symbol = 'GOOG';
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  |         key         | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201193018       | GOOG_2018-08-31 09  | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5     | 1230.02   |
+| 20181201205623       | GOOG_2018-08-31 10  | GOOG    | 2018-08-31 10:59:00  | 9021    | 1227.1993  | 1227.215  |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+
+select count(key),count(distinct key),max(ts) from stock_ticks_mor_rt;
++------+------+----------------------+--+
+| _c0  | _c1  |         _c2          |
++------+------+----------------------+--+
+| 197  | 197  | 2018-08-31 10:59:00  |
++------+------+----------------------+--+
+
+
+set hoodie.stock_ticks_cow.consume.mode=INCREMENTAL;
+# DEFAULT_SCAN_MODE
+set hoodie.stock_ticks_cow.consume.max.commits=3;  ## 提交文件次数？ 
+set hoodie.stock_ticks_cow.consume.start.timestamp=20181201193018+1;
+select `_hoodie_commit_time`,key, symbol, ts, volume, open, close  from stock_ticks_cow where  symbol = 'GOOG';
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  |         key         | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201192234       | GOOG_2018-08-31 09  | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5     | 1230.02   |
+| 20181201205539       | GOOG_2018-08-31 10  | GOOG    | 2018-08-31 10:59:00  | 9021    | 1227.1993  | 1227.215  |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+
+set hoodie.stock_ticks_cow.consume.max.commits=100;  ## 提交文件次数？ 
+select `_hoodie_commit_time`,key, symbol, ts, volume, open, close  from stock_ticks_cow where  symbol = 'GOOG' and `_hoodie_commit_time` > '20181201192235';
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| _hoodie_commit_time  |         key         | symbol  |          ts          | volume  |    open    |   close   |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+| 20181201205539       | GOOG_2018-08-31 10  | GOOG    | 2018-08-31 10:59:00  | 9021    | 1227.1993  | 1227.215  |
++----------------------+---------------------+---------+----------------------+---------+------------+-----------+--+
+
+
+select `_hoodie_commit_time`,key, symbol, ts, volume, open, close  from stock_ticks_cow where  symbol = 'GOOG' and `_hoodie_commit_time` < '20181201192235';
++----------------------+---------------------+---------+----------------------+---------+---------+----------+--+
+| _hoodie_commit_time  |         key         | symbol  |          ts          | volume  |  open   |  close   |
++----------------------+---------------------+---------+----------------------+---------+---------+----------+--+
+| 20181201192234       | GOOG_2018-08-31 09  | GOOG    | 2018-08-31 09:59:00  | 6330    | 1230.5  | 1230.02  |
++----------------------+---------------------+---------+----------------------+---------+---------+----------+--+
+
+
+set hoodie.stock_ticks_cow.consume.mode=INCREMENTAL;
+set hoodie.stock_ticks_cow.consume.max.commits=1;  ## 提交文件次数？ 
+set hoodie.stock_ticks_cow.consume.start.timestamp=20181201193018-10;
+Hudi incremental mode provides efficient scanning for incremental queries by filtering out files that do not have any candidate rows using hudi-managed metadata. 增量查询
+
+
+ /opt  /var/hoodie/ws/hoodie-cli/hoodie-cli.sh
+
+ ============================================
+*                                          *
+*     _    _                 _ _           *
+*    | |  | |               | (_)          *
+*    | |__| | ___   ___   __| |_  ___      *
+*    |  __  |/ _ \ / _ \ / _` | |/ _ \     *
+*    | |  | | (_) | (_) | (_| | |  __/     *
+*    |_|  |_|\___/ \___/ \__,_|_|\___|     *
+*                                          *
+============================================
+
+Welcome to Hoodie CLI. Please type help if you are looking for help.
+connect --path /user/hive/warehouse/stock_ticks_mor
+commits show --sortBy "Total Bytes Written" --desc true --limit 10
+ __________________________________________________________________________________________________________________________________________________________________________
+    | CommitTime    | Total Bytes Written| Total Files Added| Total Files Updated| Total Partitions Written| Total Records Written| Total Update Records Written| Total Errors|
+    |=========================================================================================================================================================================|
+    | 20181201205623| 703.1 KB           | 0                | 1                  | 1                       | 99                   | 99                          | 0           |
+    | 20181201193018| 432.5 KB           | 1                | 0                  | 1                       | 197                  | 0                           | 0           |
+
+
+
+
+hoodie:stock_ticks_mor->help
+* ! - Allows execution of operating system (OS) commands
+* // - Inline comment markers (start of line only)
+* ; - Inline comment markers (start of line only)
+* clean showpartitions - Show partition level details of a clean
+* cleans refresh - Refresh the commits
+* cleans show - Show the cleans
+* clear - Clears the console
+* cls - Clears the console
+* commit rollback - Rollback a commit
+* commits compare - Compare commits with another Hoodie dataset
+* commit showfiles - Show file level details of a commit
+* commit showpartitions - Show partition level details of a commit
+* commits refresh - Refresh the commits
+* commits show - Show the commits
+* commits sync - Compare commits with another Hoodie dataset
+* compaction repair - Renames the files to make them consistent with the timeline as dictated by Hoodie metadata. Use when compaction unschedule fails partially.
+* compaction run - Run Compaction for given instant time
+* compaction schedule - Schedule Compaction
+* compaction show - Shows compaction details for a specific compaction instant
+* compactions show all - Shows all compactions that are in active timeline
+* compaction unschedule - Unschedule Compaction
+* compaction unscheduleFileId - UnSchedule Compaction for a fileId
+* compaction validate - Validate Compaction
+* connect - Connect to a hoodie dataset
+* create - Create a hoodie table if not present
+* date - Displays the local date and time
+* desc - Describle Hoodie Table properties
+* exit - Exits the shell
+* hdfsparquetimport - Imports Parquet dataset to a hoodie dataset
+* help - List all commands usage
+* quit - Exits the shell
+* repair addpartitionmeta - Add partition metadata to a dataset, if not present
+* repair deduplicate - De-duplicate a partition path contains duplicates & produce repaired files to replace with
+* savepoint create - Savepoint a commit
+* savepoint rollback - Savepoint a commit
+* savepoints refresh - Refresh the savepoints
+* savepoints show - Show the savepoints
+* script - Parses the specified resource file and executes its commands
+* show archived commits - Read commits from archived files and show details
+* show fsview all - Show entire file-system view
+* show fsview latest - Show latest file-system view
+* show logfile metadata - Read commit metadata from log files
+* show logfile records - Read records from log files
+* show rollback - Show details of a rollback instant
+* show rollbacks - List all rollback instants
+* stats filesizes - File Sizes. Display summary stats on sizes of files
+* stats wa - Write Amplification. Ratio of how many records were upserted to how many records were actually written
+* sync validate - Validate the sync by counting the number of records
+* system properties - Shows the shell is properties
+* utils loadClass - Load a class
+* version - Displays shell version
+
+hoodie:stock_ticks_mor->desc
+    _________________________________________________________________________________
+    | Property                       | Value                                         |
+    |================================================================================|
+    | basePath                       | /user/hive/warehouse/stock_ticks_mor          |
+    | metaPath                       | /user/hive/warehouse/stock_ticks_mor/.hoodie  |
+    | fileSystem                     | hdfs                                          |
+    | hoodie.table.name              | stock_ticks_mor                               |
+    | hoodie.compaction.payload.class| com.uber.hoodie.common.model.HoodieAvroPayload|
+    | hoodie.table.type              | MERGE_ON_READ                                 |
+    | hoodie.archivelog.folder       | archived                                      |
+
+
+
+connect --path /user/hive/warehouse/stock_ticks_cow
+return : Metadata for table stock_ticks_cow loaded
+ ________________________________________________________________________
+    | Property                | Value                                       |
+    |=======================================================================|
+    | basePath                | /user/hive/warehouse/stock_ticks_cow        |
+    | metaPath                | /user/hive/warehouse/stock_ticks_cow/.hoodie|
+    | fileSystem              | hdfs                                        |
+    | hoodie.table.name       | stock_ticks_cow                             |
+    | hoodie.table.type       | COPY_ON_WRITE                               |
+    | hoodie.archivelog.folder| archived                                    |
+
+
+compactions show all ## 已废除

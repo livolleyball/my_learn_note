@@ -111,6 +111,7 @@ lateral view explode(hive_udf.json_as_map (map_json)) tf as k,v;
 
 
 hive_udf.daydiff
+note : 参数不能等于0
 select hive_udf.daydiff(20180525,20180504) from dim.dim_city limit 1；
 
 hive_udf.arrayunion
