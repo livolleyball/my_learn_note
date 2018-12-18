@@ -27,7 +27,12 @@ group by date(create_time)
 处理办法：
 有两种
 第一种：修改表，然后对于需要生效的分区，先drop 再 add. （或者说：先drop 表在重新建表再添加分区）
-第二种：修改表，对需要生效的分区也执行添加或者修改字段的操作，比如：alter table tablename partition(year='2017') add columns(name STRING );
+第二种：修改表，对需要生效的分区也执行添加或者修改字段的操作，比如：
+
+alter table dmp.table  partition(day='20181128') change column cargo_channel cargo_channel bigint;
+
+alter table dmp.table  change column cargo_channel cargo_channel bigint CASCADE;
+
 ```
 
 ```sql

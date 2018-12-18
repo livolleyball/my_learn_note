@@ -18,3 +18,9 @@ all1=`expr ${all1##* } / 1024 / 1024 / 1024 / 1024`
 
 hive -e "insert overwrite table rpt.mytb partition(day=$day1) select $day1,$all1,$used,hive_udf.ymm_current_millis() from rpt.oth_tb limit 1;"
 ```
+
+```sql
+hive 执行结果中过滤掉 "INFO" "WARNING"
+  check_sql_return_result=`
+  hive -e "${check_sql}" | grep -v "INFO" | grep -v "WARNING"`
+```
