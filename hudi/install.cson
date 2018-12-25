@@ -241,7 +241,8 @@ docker exec -it adhoc-2 /bin/bash
 
 spark-submit 
 --class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE 
---storage-type COPY_ON_WRITE --source-class com.uber.hoodie.utilities.sources.JsonKafkaSource 
+--storage-type COPY_ON_WRITE 
+--source-class com.uber.hoodie.utilities.sources.JsonKafkaSource 
 --source-ordering-field ts  
 --target-base-path /user/hive/warehouse/stock_ticks_cow 
 --target-table stock_ticks_cow 

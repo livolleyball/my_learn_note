@@ -3,7 +3,7 @@
 DROP TEMPORARY MACRO IF EXISTS nvl_array;
 CREATE TEMPORARY MACRO nvl_array(in_array array<string>)
     if(size(in_array) =-1 ,
-	hive_udf.array_intersect(array('A'),array('C')),
+	hive_udf.array_intersect(array()),
 in_array);
 ```
 
