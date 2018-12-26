@@ -79,8 +79,11 @@ Incremental data modeling 增量数据建模
 ![Latest mode VS Incremental mode ](/hudi/Latest_mode_VS_Incremental_mode.png)
 
 Standardized data model  标准化数据模型
-* Changelog history table  更改日志历史记录表
+* Changelog history table  更改日志历史记录表 
+    * 应对缓慢变化维度， 保留数据每一次最细粒度的变更
 * Merged snapshot table  合并快照表
+    * 快照表
+
 ![change_log VS Snapshot](/hudi/change_log_tb.png)
 
 
