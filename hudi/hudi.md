@@ -72,7 +72,7 @@ Hudi将数据集组织到基本路径下的分区目录结构中，类似于传�
 * 可以增量拉取
 
 
-
+### 模型
 Incremental data modeling 增量数据建模
 * Latest mode view  最新模式视图
 * Incremental mode view  增量模式视图
