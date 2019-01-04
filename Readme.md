@@ -14,5 +14,6 @@ basic 应用必知必会
 * elasticsearch
   * [go_mysql_es](/learn_elasticsearch/go_mysql_es.md)
 * hudi  -- Incremental Processing Framework on Apache Hadoop 增量处理框架
+    * [hudi 基础概念介绍](/hudi/hudi.md)
 * kafka
 * pulsar
