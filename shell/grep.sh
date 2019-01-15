@@ -18,3 +18,6 @@ ls | grep -E 'a\|g'
 
 -e<范本样式> 或 --regexp=<范本样式> : 指定字符串做为查找文件内容的样式。
 ls | grep -e 'a\|g'
+
+
+hdfs dfsadmin -report | egrep 'DFS Used%' |  egrep 'DFS Used%' | cut -c12-16

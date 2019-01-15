@@ -153,3 +153,28 @@ set hive.auto.convert.join=true;     -- map的时候将小表完全放到内存�
 set hive.mapjoin.smalltable.filesize=25000000;
 set hive.map.aggr=true;   -- 提高聚合性能；需要更多内存
 ```
+
+## hive 日期转化
+```sql
+-----------------------------------------当前，昨天----------------------------------------------------------
+select from_unixtime(unix_timestamp(),'yyyy-MM-dd HH:mm:ss')   --获取当前time
+select from_unixtime(unix_timestamp(),'yyyy-MM-dd')            --获取当前date
+select from_unixtime(unix_timestamp(),'yyyyMMdd')              --获取当前day
+select from_unixtime(unix_timestamp() - 86400,'yyyy-MM-dd')    --获取昨天date
+select from_unixtime(unix_timestamp() - 86400,'yyyyMMdd')      --获取昨天day
+-----------------------------------------'yyyyMMdd'-----------------------------------------------------------
+select unix_timestamp('20181008','yyyyMMdd')                                             --1538928000
+select from_unixtime(unix_timestamp('20181008','yyyyMMdd'),'yyyy-MM-dd')                 --2018-10-08
+select from_unixtime(unix_timestamp('20181008','yyyyMMdd'),'yyyy-MM-dd HH:mm:ss')        --2018-10-08 00:00:00
+select from_unixtime(unix_timestamp('20181008','yyyyMMdd') -86400 * N ,'yyyyMMdd')       --20181007    N天前
+-----------------------------------------'yyyy-MM-dd'-----------------------------------------------------------
+select cast(regexp_replace('2018-10-08','-','') as int)                                --20181008
+select cast(regexp_replace(substr('2018-10-08 18:55:08', 1, 10),'-','') as int)      --20181008
+-----------------------------------------1538928000秒----------------------------------------------------------
+select from_unixtime(1538928000,'yyyy-MM-dd HH:mm:ss')                            --2018-10-08 00:00:00
+select cast(substr(from_unixtime(1538928000,'yyyy-MM-dd HH:mm:ss'),12,2) as int)  --获取小时
+-----------------------------------------1538996108507毫秒----------------------------------------------------
+select from_unixtime(floor(1538996108507/1000) ,'yyyyMMdd')             --20181008
+select from_unixtime(floor(1538996108507/1000) ,'yyyy-MM-dd')           --2018-10-08
+select from_unixtime(floor(1538996108507/1000) ,'yyyy-MM-dd HH:mm:ss')  --2018-10-08 18:55:08
+```

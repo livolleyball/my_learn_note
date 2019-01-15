@@ -16,4 +16,6 @@ basic 应用必知必会
 * hudi  -- Incremental Processing Framework on Apache Hadoop 增量处理框架
     * [hudi 基础概念介绍](/hudi/hudi.md)
 * kafka
+  * [kafka_cat](/kafka/kafkacat.md)
 * pulsar
+* go语言

@@ -22,7 +22,7 @@ fi
 ## 通配符
 A="helloworld"
 B="low"
-if [[ $A = *$B* ]] 
+if 
 then  
   echo "包含"
 else  
