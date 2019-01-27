@@ -209,3 +209,19 @@ set mapred.job.priority=HIGH；
 SET mapred.reduce.tasks=50;
 SET mapreduce.reduce.memory.mb=6000;
 SET mapreduce.reduce.shuffle.memory.limit.percent=0.06;
+
+十 outofmemoryError
+OOM  in mapper
+mapred.child.java.opts/mapred.map.child.java.opts 提升至一个比较大的值
+如果仍然存在 OOM
+SET mapred.max.split.size=67108864;
+OOM in shuffle/merge
+SET mapred.reduce.tasks=64;
+
+十一 maximum number of mappers via setting
+set mapreduce.job.maps=128;
+
+
+十二 Map-side join on Tez causes ClassCastException when a serialized table contains array column(s).
+[Workaround] Try setting hive.mapjoin.optimized.hashtable off as follows:
+set hive.mapjoin.optimized.hashtable=false;

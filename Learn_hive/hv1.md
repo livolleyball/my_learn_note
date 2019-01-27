@@ -178,3 +178,9 @@ select from_unixtime(floor(1538996108507/1000) ,'yyyyMMdd')             --201810
 select from_unixtime(floor(1538996108507/1000) ,'yyyy-MM-dd')           --2018-10-08
 select from_unixtime(floor(1538996108507/1000) ,'yyyy-MM-dd HH:mm:ss')  --2018-10-08 18:55:08
 ```
+
+```sql 
+select business_tags,get_json_object(business_tags,'$.\\u0010time4') ,
+regexp_extract(business_tags,'(0010time4":")(.*?)(")',2)
+from dmp.lihm_20190115  ;
+``` 
