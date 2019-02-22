@@ -184,3 +184,14 @@ select business_tags,get_json_object(business_tags,'$.\\u0010time4') ,
 regexp_extract(business_tags,'(0010time4":")(.*?)(")',2)
 from dmp.lihm_20190115  ;
 ``` 
+
+
+``` sql
+select * from (select posexplode(array(null,'B',null,'D')) as (pos,val)) A
+left join (select posexplode(array(null,'B',null,'D')) as (pos,val)) B 
+on A.pos= B.pos
+
+select * from (select posexplode(array(null,'B',null,'D')) as (pos,val)) A
+left join (select posexplode(array(null,'B',null,'D')) as (pos,val)) B 
+on A.val= B.val
+```
