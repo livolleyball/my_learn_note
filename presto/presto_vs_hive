@@ -1,0 +1,41 @@
+presto 使用ANSI 的语义和语法，而 hive 使用的HiveQL 是一种 SQL-Like语言，类似Mysql的语法，虽然大部分语法与ANSI相似，但是还是有不少差别。
+ 
+show databases;
+presto 每个connector 叫一个catalog，例如hive;
+数据库称为schema, 例如hive中 show databases,presto中 show schemas;
+presto中查询表的数据：select * from  [catalog].[schema].[tableName];
+ 
+presto支持动态数组下标
+presto支持动态数组下表，而HiveQL只支持常量数组下标，ANSI SQL定义如下：
+SELECT my_array[CARDINALITY(my_array)] as last_element FROM ...
+presto数组语法
+第一个元素的数组下标从1开始：
+SELECT my_array[1] AS first_element FROM ...
+单双引号和反引号的使用
+presto 字符串用单引号，标识符用双引号(或者空，但是中文标识符必须用双引号间隔，例如中文别名)，例如 ： select "user_id"  as "用户ID" from "temp_table"  where name='张三';
+hiveQL字符串用单引号或者双引号，标识符用反引号，例如：select `user_id`  as `用户ID` from `temp_table` where name="张三"; 
+
+数字开头的标识符
+presto中数字开头的标识符必须用双引号分隔，例如：select * from "1_test";
+ 
+字符串连接
+presto 使用 || 做为字符串连接操作符：select 'abc' || 'def';
+
+强制类型转换
+hiveQL 有隐式类型转换；presto必须使用强制类型转换，并且必须是标准类型（字符串使用varchar），例如：
+SELECT CAST(x AS 
+) , CAST(x AS 
+) , CAST(x AS double) , CAST(x AS 
+) FROM ...
+
+除法运算
+hive中两个整数相除 7/2会得到3.5的结果，而presto中使用标准除法 7/2 = 3，因此需要做类型转换，将分子或者分母转换为double 型，例如：
+SELECT CAST(5 AS DOUBLE) / 2
+子查询使用
+presto有两种使用子查询办法：
+select * from
+(select substr(name,1,3) as x from table1)
+where x='foo';
+或者
+ with a AS (select substr(name,1,3) as x from table1)
+select * from a where x='foo';
