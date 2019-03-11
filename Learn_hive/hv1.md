@@ -99,11 +99,11 @@ select data_field,
 ```
 
 ```sql
-select regexp_extract('foothebar', 'foo(.*?)(bar)', 1) fromiteblog;
+select regexp_extract('foothebar', 'foo(.*?)(bar)', 1) from iteblog;
 the
-select regexp_extract('foothebar', 'foo(.*?)(bar)', 2) fromiteblog;
+select regexp_extract('foothebar', 'foo(.*?)(bar)', 2) from iteblog;
 bar
-select regexp_extract('foothebar', 'foo(.*?)(bar)', 0) fromiteblog;
+select regexp_extract('foothebar', 'foo(.*?)(bar)', 0) from iteblog;
 foothebar
 ```
 
