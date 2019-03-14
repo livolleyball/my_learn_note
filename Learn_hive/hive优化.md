@@ -1,8 +1,9 @@
 一、查看执行计划
+```
 explain extended hql；可以看到扫描数据的hdfs路径
-
+```
 二、hive表优化
-
+```
 分区（不同文件夹）：
 动态分区开启：
 set hive.exec.dynamic.partition=true;
@@ -18,10 +19,10 @@ set hive.exec.dynamic.partition.mode=nonstrict;
 分桶（不同文件）：
 set hive.enforce.bucketing=true;
 set hive.enforce.sorting=true;开启强制排序，插数据到表中会进行强制排序，默认false；
-
+```
 
 三、Hive SQL优化
-
+```
 groupby数据倾斜优化
 hive.groupby.skewindata=true;（多起一个job）1.join优化
 
@@ -88,10 +89,10 @@ union all
 select a,0 as b, null as c,d from test group by a,d
 union all
 select a, b,null as c ,null as d from test) tmp group by a;
-
+```
 
 四、Hive job优化
-
+```
 1.并行化执行
 hive默认job是顺序进行的，一个HQL拆分成多个job，job之间无依赖关系也没有相互影响可以并行执行
 set hive.exec.parallel=true;
@@ -135,9 +136,10 @@ set hive.intermediate.compression.type=BLOCK;按块压缩，而不是记录
 set hive.exec.compress.output=true;
 set mapred.output.compression.codec=org.apache.hadoop.io.compress.GzipCodec;
 set mapred.output.compression.type=BLOCK;按块压缩，而不是记录
+```
 
 五、Hive Map优化
-
+```
 1.set mapred.map.tasks=10 无效
 （1）默认map个数
 default_num=total_size/block_size;
@@ -158,9 +160,10 @@ set hive.map.aggr=true;相当于map端执行combiner
 
 3.推测执行（默认为true）
 mapred.map.tasks.speculative.execution
-
+```
 
 六、Hive Shuffle优化
+```
 Map 端
 io.sort.mb
 io.sort.spill.percent
@@ -173,9 +176,11 @@ mapred.reduce.parallel.copies
 mapred.reduce.copy.backoff
 io.sort.factor
 mapred.job.shuffle.input.buffer.percent
+```
 
 
 七、HIve Reduce优化
+```
 1.推测执行（默认为true）
 
 mapred.reduce.tasks.speculative.execution(hadoop里面的)
@@ -195,33 +200,44 @@ hive.exec.reducers.bytes.per.reducer 默认：1G
 numRTasks =min[maxReducers,input.size/perReducer]
 maxReducers=hive.exec.reducers.max
 perReducer=hive.exec.reducers.bytes.per.reducer
+```
 
 
 
 八、队列
+```
 set mapred.queue.name=queue3;设置队列queue3
 set mapred.job.queue.name=queue3;设置使用queue3
 set mapred.job.priority=HIGH；
+```
 
 
 九 数据倾斜
+```
  涉及数据倾斜的话，主要是reduce中数据倾斜的问题，可能通过设置hive中reduce的并行数，reduce的内存大小单位为m，reduce中 shuffle的刷磁盘的比例，来解决。
 SET mapred.reduce.tasks=50;
 SET mapreduce.reduce.memory.mb=6000;
 SET mapreduce.reduce.shuffle.memory.limit.percent=0.06;
+```
 
 十 outofmemoryError
+```
 OOM  in mapper
 mapred.child.java.opts/mapred.map.child.java.opts 提升至一个比较大的值
 如果仍然存在 OOM
 SET mapred.max.split.size=67108864;
 OOM in shuffle/merge
 SET mapred.reduce.tasks=64;
+```
 
 十一 maximum number of mappers via setting
+```
 set mapreduce.job.maps=128;
+```
 
 
 十二 Map-side join on Tez causes ClassCastException when a serialized table contains array column(s).
 [Workaround] Try setting hive.mapjoin.optimized.hashtable off as follows:
+```
 set hive.mapjoin.optimized.hashtable=false;
+```
