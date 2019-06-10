@@ -8,6 +8,8 @@ explain extended hql；可以看到扫描数据的hdfs路径
 动态分区开启：
 set hive.exec.dynamic.partition=true;
 set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.exec.max.dynamic.partitions = 130000; -- 根据实际情况调节
+set hive.exec.max.dynamic.partitions.pernode = 130000; -- 根据实际情况调节
 
     默认值：strict
    描述：strict是避免全分区字段是动态的，必须有至少一个分区字段是指定有值的
@@ -97,7 +99,7 @@ select a, b,null as c ,null as d from test) tmp group by a;
 hive默认job是顺序进行的，一个HQL拆分成多个job，job之间无依赖关系也没有相互影响可以并行执行
 set hive.exec.parallel=true;
 
-set hive.exec.parallel.thread.number=8;
+set hive.exec.parallel.thread.number=16;
 就是控制对于同一个sql来说同时可以运行的job的最大值，该参数默认为8.此时最大可以同时运行8个job
 
 2.本地化执行（在存放数据的节点上执行）
@@ -120,6 +122,7 @@ set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat
 set hive.merge.smallfiles.avgsize=256000000;当输出文件平均大小小于该值，启动新job合并文件
 
 set hive.merge.size.per.task=64000000;合并之后的每个文件大小
+## set spark.sql.hive.mergeFiles=true;   合并小文件
 
 5.JVM重利用
 set mapred.job.reuse.jvm.num.tasks=20;
@@ -134,6 +137,7 @@ set hive.intermediate.compression.codec=org.apache.hadoop.io.compress.SnappyCode
 set hive.intermediate.compression.type=BLOCK;按块压缩，而不是记录
 （2）最终输出压缩（选择压缩效果好的，减少储存空间）
 set hive.exec.compress.output=true;
+set mapred.output.compress = true;
 set mapred.output.compression.codec=org.apache.hadoop.io.compress.GzipCodec;
 set mapred.output.compression.type=BLOCK;按块压缩，而不是记录
 ```
@@ -158,8 +162,7 @@ compute_map_num=min(split_num,max(default_num,goal_num))
 2.map端聚合
 set hive.map.aggr=true;相当于map端执行combiner
 
-3.推测执行（默认为true）
-mapred.map.tasks.speculative.execution
+
 ```
 
 六、Hive Shuffle优化
@@ -240,4 +243,42 @@ set mapreduce.job.maps=128;
 [Workaround] Try setting hive.mapjoin.optimized.hashtable off as follows:
 ```
 set hive.mapjoin.optimized.hashtable=false;
+```
+
+十三 效率和稳定性相关参数
+```
+推测执行（默认为true）
+mapred.map.tasks.speculative.execution 
+mapreduce.reduce.speculative 是否为Map Task打开推测执行机制,默认是 true
+mapreduce.map.speculative 是否为Reduce Task打开推测执行机制，默认为 true
+
+```
+
+十四 容错相关参数
+```
+mapreduce.map.maxattempts: 每个Map Task最大重试次数，一旦重试参数超过该值，则认为Map Task运行失败，默认值：4。
+mapreduce.reduce.maxattempts: 每个Reduce Task最大重试次数，一旦重试参数超过该值，则认为Map Task运行失败，默认值：4。
+```
+
+十五 资源相关参数 
+```
+(1) mapreduce.map.memory.mb: 一个Map Task可使用的资源上限（单位:MB），默认为1024。如果Map Task实际使用的资源量超过该值，则会被强制杀死。
+set mapreduce.map.memory.mb = 8192; -- 每个Map Task需要的内存量
+
+(2) mapreduce.reduce.memory.mb: 一个Reduce Task可使用的资源上限（单位:MB），默认为1024。如果Reduce Task实际使用的资源量超过该值，则会被强制杀死。set mapreduce.reduce.memory.mb = 10500; -- 每个Reduce Task需要的内存量
+
+(3) mapreduce.map.java.opts: Map Task的JVM参数，你可以在此配置默认的java heap size等参数, e.g.
+“-Xmx1024m -verbose:gc -Xloggc:/tmp/@taskid@.gc” （@taskid@会被Hadoop框架自动换为相应的taskid）, 默认值: “”
+set mapreduce.map.java.opts = - Xmx9192m;  --  设置Map任务JVM的堆空间大小，默认-Xmx1024m
+
+(4) mapreduce.reduce.java.opts: Reduce Task的JVM参数，你可以在此配置默认的java heap size等参数, e.g.
+“-Xmx1024m -verbose:gc -Xloggc:/tmp/@taskid@.gc”, 默认值: “”
+set mapreduce.reduce.java.opts = - Xmx10000m;   -- 设置reduce任务JVM的堆空间大小，默认-Xmx1024m
+
+(5) mapreduce.map.cpu.vcores: 每个Map task可使用的最多cpu core数目, 默认值: 1
+set mapreduce.map.cpu.vcores = 4;  -- 每个Map Task需要的虚拟CPU个数
+
+(6) mapreduce.reduce.cpu.vcores: 每个Reduce task可使用的最多cpu core数目, 默认值: 1
+set mapreduce.reduce.cpu.vcores = 8;  -- 每个Reduce Task需要的虚拟CPU个数
+
 ```

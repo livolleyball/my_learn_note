@@ -55,7 +55,7 @@ For compilers to find openssl you may need to set:
 For pkg-config to find openssl you may need to set:
   export PKG_CONFIG_PATH="/usr/local/opt/openssl/lib/pkgconfig"
 
-127.0.0.1 adhoc-1
+   127.0.0.1 adhoc-1
    127.0.0.1 adhoc-2
    127.0.0.1 namenode
    127.0.0.1 datanode1
@@ -87,16 +87,47 @@ kafka的这一能力对于一部分应用是极为重要的，例如对于同一
 如果partition的数量发生改变，那么上面的有序性保证将不复存在。为了避免上述情况发生，通常的解决办法是多分配一些分区，
 以满足未来的需求。通常情况下，我们需要根据未来1到2年的目标吞吐量来设计kafka的分区数量。
 
+
+Step 2: Incrementally ingest data from Kafka topic
+
+docker exec -it adhoc-2 /bin/bash
+
+# Run the following spark-submit command to execute the delta-streamer and ingest to stock_ticks_cow dataset in HDFS
+spark-submit 
+--class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE \
+--storage-type COPY_ON_WRITE \ 
+--source-class com.uber.hoodie.utilities.sources.JsonKafkaSource \
+--source-ordering-field ts  \
+--target-base-path /user/hive/warehouse/stock_ticks_cow \   ## 外部表的存储路径
+--target-table stock_ticks_cow \
+--props /var/demo/config/kafka-source.properties \    ## 包括主键，分区键，kafka.topic
+--schemaprovider-class com.uber.hoodie.utilities.schema.FilebasedSchemaProvider     ## 读取kafka-source.propertie 中的 source.schema.file/target.schema.file
+这个地方需要重写成通用
+
+
 # Run the following spark-submit command to execute the delta-streamer and ingest to stock_ticks_mor dataset in HDFS
 spark-submit 
---class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE 
---storage-type MERGE_ON_READ 
---source-class com.uber.hoodie.utilities.sources.JsonKafkaSource 
---source-ordering-field ts  
---target-base-path /user/hive/warehouse/stock_ticks
+--class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE \
+--storage-type MERGE_ON_READ \
+--source-class com.uber.hoodie.utilities.sources.JsonKafkaSource \
+--source-ordering-field ts  \
+--target-base-path /user/hive/warehouse/stock_ticks_mor \
+--target-table stock_ticks_mor \
+--props /var/demo/config/kafka-source.properties \
+--schemaprovider-class com.uber.hoodie.utilities.schema.FilebasedSchemaProvider
 
-
-    /var/hoodie/ws/hoodie-hive/run_sync_tool.sh  --jdbc-url jdbc:hive2://hiveserver:10000 --user hive --pass hive --partitioned-by dt --base-path /user/hive/warehouse/stock_ticks_cow --database default --table stock_ticks_cow
+    
+Step 3: Sync with Hive
+docker exec -it adhoc-2 /bin/bash
+# THis command takes in HIveServer URL and COW Hudi Dataset location in HDFS and sync the HDFS state to Hive   
+./var/hoodie/ws/hoodie-hive/run_sync_tool.sh  \
+--jdbc-url jdbc:hive2://hiveserver:10000 \
+--user hive \
+--pass hive \
+--partitioned-by dt \
+--base-path /user/hive/warehouse/stock_ticks_cow \
+--database default \
+--table stock_ticks_cow
 
 
 # Now run hive-sync for the second data-set in HDFS using Merge-On-Read (MOR storage)
@@ -235,27 +266,31 @@ spark.sql("select `_hoodie_commit_time`, symbol, ts, volume, open, close  from s
 |20181201193018     |GOOG  |2018-08-31 10:29:00|3391  |1230.1899|1230.085|
 +-------------------+------+-------------------+------+---------+--------+
 
+Step 5: Upload second batch to Kafka and run DeltaStreamer to ingest
+Upload the second batch of data and ingest this batch using delta-streamer. 
+As this batch does not bring in any new partitions, there is no need to run hive-sync
+如果没有新的分区，不需要进行 hive-sync
 
 cat docker/demo/data/batch_2.json | kafkacat -b kafkabroker -t stock_ticks -P 
 docker exec -it adhoc-2 /bin/bash
 
 spark-submit 
---class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE 
---storage-type COPY_ON_WRITE 
---source-class com.uber.hoodie.utilities.sources.JsonKafkaSource 
---source-ordering-field ts  
---target-base-path /user/hive/warehouse/stock_ticks_cow 
---target-table stock_ticks_cow 
+--class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE \
+--storage-type COPY_ON_WRITE \
+--source-class com.uber.hoodie.utilities.sources.JsonKafkaSource \
+--source-ordering-field ts  \
+--target-base-path /user/hive/warehouse/stock_ticks_cow \
+--target-table stock_ticks_cow \
 --props /var/demo/config/kafka-source.properties
 
 
-spark-submit 
---class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE 
---storage-type MERGE_ON_READ 
---source-class com.uber.hoodie.utilities.sources.JsonKafkaSource
---source-ordering-field ts  
---target-base-path /user/hive/warehouse/stock_ticks_mor 
---target-table stock_ticks_mor 
+spark-submit \
+--class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE \
+--storage-type MERGE_ON_READ \
+--source-class com.uber.hoodie.utilities.sources.JsonKafkaSource \
+--source-ordering-field ts  \
+--target-base-path /user/hive/warehouse/stock_ticks_mor \
+--target-table stock_ticks_mor \
 --props /var/demo/config/kafka-source.properties
 
 

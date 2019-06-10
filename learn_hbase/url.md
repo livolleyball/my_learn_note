@@ -16,3 +16,11 @@
 [HBase 列族数据库](https://blog.csdn.net/u013378306/article/details/52442654)
 [HBase官方文档](https://www.w3cschool.cn/hbase_doc/)
 [Hbase数据库](http://www.cnblogs.com/xuzimian/p/9497605.html)
+
+
+Hbase 配置参数
+(1) hbase.rpc.timeout：rpc的超时时间，默认60s，不建议修改，避免影响正常的业务，在线上环境刚开始配置的是3秒，运行半天后发现了大量的timeout error，原因是有一个region出现了如下问题阻塞了写操作：“Blocking updates … memstore size 434.3m is >= than blocking 256.0m size”可见不能太低。
+(2) ipc.socket.timeout：socket建立链接的超时时间，应该小于或者等于rpc的超时时间，默认为20s
+(3) hbase.client.retries.number：重试次数，默认为14，可配置为3
+(4) hbase.client.pause：重试的休眠时间，默认为1s，可减少，比如100ms
+(5) hbase.regionserver.lease.period：scan查询时每次与server交互的超时时间，默认为60s，可不调整。
