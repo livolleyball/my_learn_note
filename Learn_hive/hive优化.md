@@ -263,8 +263,8 @@ set mapreduce.map.cpu.vcores = 4;  -- 每个Map Task需要的虚拟CPU个数
 set mapreduce.reduce.cpu.vcores = 8;  -- 每个Reduce Task需要的虚拟CPU个数
 
 ```
-
-### hive map 数据倾斜
+ ### hive-sql 优化 
+#### hive map 数据倾斜
 ```SQL
 ------------------------- 参数优化  ----------------------------------
 SET hive.map.aggr=true;
@@ -288,7 +288,7 @@ set hive.skewjoin.key=100000;
 简单说就是一个job变为两个job执行HQL
 ```
 
-### hive join 倾斜
+#### hive join 倾斜
 ``` sql
 现象：join 过程平均耗时与最大耗时相差较大
 解决方法 ：
@@ -331,7 +331,7 @@ on t2.id = t2.id
 ```
 
 
-### hive reduce  倾斜
+#### hive reduce  倾斜
 ```sql
 1. group by 某个key严重倾斜 
 2. distinct 引起的倾斜
@@ -372,6 +372,16 @@ from(
 group by id
 ```
 
+#### 一份数据 多份处理
+``` sql
+  FROM TABLE1
+  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table1.txt' SELECT 20140303, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140303 AND col3 >= 20140201 GROUP BY col1, col2
+  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table2.txt' SELECT 20140302, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140302 AND col3 >= 20140131 GROUP BY col1, col2
+  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table3.txt' SELECT 20140301, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140301 AND col3 >= 20140130 GROUP BY col1, col2
+  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table4.txt' SELECT 20140228, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140228 AND col3 >= 20140129 GROUP BY col1, col2
+  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table5.txt' SELECT 20140227, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140227 AND col3 >= 20140128 GROUP BY col1, col2
+  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table6.txt' SELECT 20140226, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140226 AND col3 >= 20140127 GROUP BY col1, col2
+```
 
 ### 文件
 小文件的合并 job合并输出小文件（为后续job优化做准备）
@@ -408,13 +418,3 @@ order by 排序，只存在一个reduce，这样效率比较低。
 可以用sort by操作,通常结合distribute by使用做reduce分区键
 
 
-### 一份数据 多份处理
-``` sql
-  FROM TABLE1
-  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table1.txt' SELECT 20140303, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140303 AND col3 >= 20140201 GROUP BY col1, col2
-  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table2.txt' SELECT 20140302, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140302 AND col3 >= 20140131 GROUP BY col1, col2
-  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table3.txt' SELECT 20140301, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140301 AND col3 >= 20140130 GROUP BY col1, col2
-  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table4.txt' SELECT 20140228, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140228 AND col3 >= 20140129 GROUP BY col1, col2
-  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table5.txt' SELECT 20140227, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140227 AND col3 >= 20140128 GROUP BY col1, col2
-  INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table6.txt' SELECT 20140226, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140226 AND col3 >= 20140127 GROUP BY col1, col2
-```
