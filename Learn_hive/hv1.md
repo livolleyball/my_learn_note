@@ -109,7 +109,7 @@ foothebar
 
 ```sql
 hive -e "show databases"
-hive -S -e "show databases"  -- 过滤掉 time_taken and total_row
+hive -S -e "show databases"  -- 过滤掉 time_taken and total_row  (Time taken: 2.031 seconds, Fetched: 24 row(s))
 hive -S -e "show databases" > /tmp/myquery_result
 
 export HIVE_SKIP_SPARK_ASSEMBLY=true  --设置HIVE_SKIP_SPARK_ASSEMBLY，过滤掉WARN: Please slf4j
@@ -194,4 +194,29 @@ on A.pos= B.pos
 select * from (select posexplode(array(null,'B',null,'D')) as (pos,val)) A
 left join (select posexplode(array(null,'B',null,'D')) as (pos,val)) B 
 on A.val= B.val
+```
+
+```sql
+-- 在hive中通过反射，调用java.net.URLDecoder，解码url
+select reflect("java.net.URLDecoder", "decode", "https%3A%2F%2Fstatic.hotels.cn%2FwifiLanding%3FhotelId%3D124261%26", "UTF-8");
+
+
+select   a
+,regexp_extract(a,'hotelId=([0-9]+)',1) as hotelId
+,parse_url(a,'QUERY','wifiId') as wifiId
+,parse_url(a,'QUERY','hotelId') as hotelId
+from (
+select hive_udf.decode_url('https%3A%2F%2Fstatic.hotels.cn%2FwifiLanding%3FhotelId%3D124261%26wifiId%3D3476a2a3-e5d1-407f-8cf4-40bef4774627&scancode_time=1562682909') as a 
+from (select 1) as t) AA
+
+
+select   
+regexp_extract(a,'.*?hotelId\\=([^&]+)',0) as hotelId,
+regexp_extract(a,'.*?hotelId\\=([^&]+)',1) as hotelId,
+regexp_extract(a,'.*?wifiId\\=([^&]+)',0) as wifiId,
+regexp_extract(a,'.*?wifiId\\=([^&]+)',1) as wifiId
+from (
+select hive_udf.decode_url('https%3A%2F%2Fstatic.hotels.cn%2FwifiLanding%3FhotelId%3D124261%26wifiId%3D3476a2a3-e5d1-407f-8cf4-40bef4774627&scancode_time=1562682909') as a 
+from (select 1) as t) AA 
+
 ```

@@ -93,7 +93,7 @@ Step 2: Incrementally ingest data from Kafka topic
 docker exec -it adhoc-2 /bin/bash
 
 # Run the following spark-submit command to execute the delta-streamer and ingest to stock_ticks_cow dataset in HDFS
-spark-submit 
+spark-submit \
 --class com.uber.hoodie.utilities.deltastreamer.HoodieDeltaStreamer $HUDI_UTILITIES_BUNDLE \
 --storage-type COPY_ON_WRITE \ 
 --source-class com.uber.hoodie.utilities.sources.JsonKafkaSource \

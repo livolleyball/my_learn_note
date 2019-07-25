@@ -120,28 +120,6 @@ SELECT s.ymd, s.symbol, s.price_close, d.dividend
 FROM stocks s JOIN dividends d ON s.ymd = d.ymd AND s.symbol = d.symbol > WHERE s.symbol = 'AAPL';
 ```
 
-```SQL
-------------------------- 数据倾斜参数优化  ----------------------------------
-SET hive.map.aggr=true;
-会触发在map阶段的 “顶级” 聚合过程。
-非顶级聚合过程将会在执行一个 group by 之后进行。
-启动方式一：(自动判断）
-set.hive.auto.convert.join=true;
-hive.mapjoin.smalltable.filesize 默认值是25mb
-小表小于25mb自动启动mapjoin
-启动方式二：(手动）
-select /*+mapjoin(A)*/ f.a,f.b from A t join B f on (f.a=t.a)
-
-
-mapjoin支持不等值条件
-reducejoin不支持在ON条件中不等值判断
-
-hive.optimize.skewjoin=true;
-如果是join过程出现倾斜，应该设置为true
-set hive.skewjoin.key=100000;
-这个是join的键对应的记录条数超过这个值则会进行优化
-简单说就是一个job变为两个job执行HQL
-```
 
 ``` sql
 ------------------------- 分区问题  ----------------------------------
@@ -171,3 +149,19 @@ return
 20181118,1
 ```
 
+十 outofmemoryError
+```
+OOM  in mapper
+mapred.child.java.opts/mapred.map.child.java.opts 提升至一个比较大的值
+如果仍然存在 OOM
+SET mapred.max.split.size=67108864;
+OOM in shuffle/merge
+SET mapred.reduce.tasks=64;
+```
+
+十二  Tez 表中存在 array 字段
+Map-side join on Tez causes ClassCastException when a serialized table contains array column(s).
+[Workaround] Try setting hive.mapjoin.optimized.hashtable off as follows:
+``` SQL
+set hive.mapjoin.optimized.hashtable=false;
+```
