@@ -381,6 +381,25 @@ group by id
   INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table4.txt' SELECT 20140228, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140228 AND col3 >= 20140129 GROUP BY col1, col2
   INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table5.txt' SELECT 20140227, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140227 AND col3 >= 20140128 GROUP BY col1, col2
   INSERT OVERWRITE LOCAL DIRECTORY '/data/data_table/data_table6.txt' SELECT 20140226, col1, col2, 2160701, COUNT(DISTINCT col) WHERE col3 <= 20140226 AND col3 >= 20140127 GROUP BY col1, col2
+
+
+
+create table oyo_tmp.lihm_2 (id int);
+
+create table oyo_tmp.lihm_1 (id int);
+
+
+from (select 1) a
+insert overwrite table oyo_tmp.lihm_1
+select 1
+insert overwrite table oyo_tmp.lihm_2
+select 2 ;
+
+
+
+select * from oyo_tmp.lihm_2
+union all 
+select * from oyo_tmp.lihm_1;
 ```
 
 ### 文件
