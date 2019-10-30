@@ -39,3 +39,15 @@ set hive.support.concurrency=false; 默认为true
 
  UNLOCK TABLE TABLE_NAME;
 ```
+
+```sql
+lock table oyo_tmp.dw_lihm_01 exclusive; -- 排他锁  不可查询 DQL ( select )
+select * from  oyo_tmp.dw_lihm_01;
+show locks oyo_tmp.dw_lihm_01;
+
+
+lock table  oyo_tmp.lihm_01  SHARED ; --共享锁 不可插入 DML （insert delete ）
+show locks  oyo_tmp.lihm_01;
+select * from oyo_tmp.lihm_01;
+insert into oyo_tmp.lihm_01 select 2 ;
+```

@@ -301,6 +301,14 @@ set hive.skewjoin.key=100000;
 select t1.col1,t2.col2 from tb1 t1 
 left join tb2 t2 on t1.id = t2.id;
 
+-- 0.查看key的分布，可以判断a join b时是否会有数据倾斜
+select left.key, left.cnt * right.cnt from 
+(select key, count(*) as cnt from a group by key) left 
+join
+(select key, count(*) as cnt from b group by key) right
+on left.key=right.key;
+
+
 -- 1.分析哪些key值造成了倾斜
 select id,count(1) as cnt from  big_tb group by id order by cnt desc limit 10;
 
@@ -406,6 +414,8 @@ select * from oyo_tmp.lihm_1;
 小文件的合并 job合并输出小文件（为后续job优化做准备）
 大量的小文件导致文件数目过多，给HDFS带来压力，对hive处理的效率影响比较大，可以合并map和reduce产生的文件
 ``` sql
+-- 设置 map输出和reduce输出进行合并的相关参数
+
 set hive.merge.mapfiles =true                          -- 是否和并 Map 输出文件，默认为 True
 set hive.merge.mapredfiles =true                       --  是否合并 Reduce 输出文件，默认为 False
 set hive.merge.size.per.task = 256*1000*1000           -- 合并文件的大小
@@ -415,8 +425,13 @@ set hive.merge.smallfiles.avgsize=256000000;           -- 当输出文件平均�
 
 
 -- job合并输入小文件
+set mapred.max.split.size=256000000; #每个Map最大输入大小
+
 set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat
 多个split合成一个,合并split数由mapred.max.split.size限制的大小决定
+
+mapred.min.split.size.per.node=256000000; 决定了多个data node上的文件是否需要合并~
+mapred.min.split.size.per.rack=256000000; 决定了多个交换机上的文件是否需要合并~
 
 6.压缩数据（多个job）
 （1）中间压缩处理hive查询的多个job之间的数据，对于中间压缩，最好选择一个节省cpu耗时的压缩方式
@@ -437,3 +452,57 @@ order by 排序，只存在一个reduce，这样效率比较低。
 可以用sort by操作,通常结合distribute by使用做reduce分区键
 
 
+  
+默认
+hive.exec.reducers.bytes.per.reducer=268435456
+hive.merge.mapfiles=true
+hive.cbo.enable=false  -- 不建议修改
+hive.map.aggr=true
+hive.merge.size.per.task=268435456
+
+hive.strict.checks.no.partition.filter=false -- 待确认
+
+
+
+
+修改
+hive.merge.mapredfiles=true   -- 默认false
+hive.merge.smallfiles.avgsize=160000000   --  默认 33554432
+-- 并行
+set hive.exec.parallel=true;  -- 默认 false
+
+
+
+
+添加 
+-- 终端显示所在库名
+set hive.cli.print.header=true;
+set hive.cli.print.current.db=true;
+<property>
+　　<name>hive.cli.print.header</name>
+　　<value>true</value>
+　　 <description>Whether to print the names of the columns in query output.</description>
+</property>
+<property>
+　　<name>hive.cli.print.current.db</name>
+　　 <value>true</value>
+　　<description>Whether to include the current database in the Hive prompt.</description>
+</property>
+
+
+-- 默认建表
+set hive.default.fileformat =PARQUET;
+<property>
+　　<name>hive.default.fileformat</name>
+　　 <value>PARQUET</value>  -- 需确认大小写
+　　<description>create table default as PARQUET </description>
+</property>
+
+
+
+
+删除/或修改
+<property>
+  <name>hive.vectorized.input.format.excludes</name>
+  <value>org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat</value>
+</property>

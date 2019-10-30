@@ -179,3 +179,28 @@ from hive_parsing_json_table hpjp
      LATERAL VIEW json_tuple(v3.Impressions, 's' , 'o') v4
      as impressions_s,impressions_o;  
 ```
+
+``` SQL
+-- collect_list 有序
+SELECT -- concat_ws(',',collect_set(enum_value))  over (  order by enum_key desc )
+-- ,
+concat_ws(',',collect_list(enum_val)  over (  order by enum_key desc rows between unbounded preceding and unbounded following))
+from dw.dim_enums
+```
+
+
+
+```
+select time ,user_id,search_method,
+ group_flag,
+    FIRST_VALUE(search_method) OVER(PARTITION BY group_flag ORDER BY time) AS last_search_method
+from (
+SELECT  time,user_id,search_method,
+    row_number() OVER(PARTITION BY user_id ORDER BY time) AS rn,
+   sum(if(search_method ='', 1,0))  OVER(PARTITION BY user_id ORDER BY time) AS sum_cnt,
+   row_number() OVER(PARTITION BY user_id ORDER BY time) -sum(if(search_method ='', 1,0))  OVER(PARTITION BY user_id ORDER BY time)  as group_flag
+FROM oyo_behavior_dw.dw_sensor_events_data
+where date_time = '2019-07-29'
+and user_id = '828598249005366892'
+order by `time` ) A
+```
