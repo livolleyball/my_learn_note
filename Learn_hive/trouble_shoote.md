@@ -165,3 +165,9 @@ Map-side join on Tez causes ClassCastException when a serialized table contains 
 ``` SQL
 set hive.mapjoin.optimized.hashtable=false;
 ```
+
+十三  org.apache.hadoop.hive.ql.plan.ConditionalWork cannot be cast to org.apache.hadoop.hive.ql.plan.MapredWork
+
+hive.ql.plan.ConditionalWork cannot be cast to hive.ql.plan.MapredWork
+
+SET hive.auto.convert.join.noconditionaltask=true;
