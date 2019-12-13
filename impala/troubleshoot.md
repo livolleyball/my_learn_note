@@ -14,3 +14,4 @@ File handle cache entries are evicted as the cache fills up, or based on a timeo
 ```
 >> * 设置 cache_remote_file_handles = true 防止当集群有很多远程HDFS读时，发生过载
 >> * 远程文件特性只适合于 HDFS 数据文件。 不适合于 KUDO HBASE 表，以及 S3
+>> * 在 impalad daemon启动时设置  --max_cached_file_handles=0  ，可以修复 file metadata 的问题，但是比较消耗性能

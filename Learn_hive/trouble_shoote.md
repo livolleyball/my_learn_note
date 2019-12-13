@@ -3,7 +3,7 @@
 ```sql
 在hive里面表可以创建成分区表，但是当分区字段的值是'' 或者 null时 hive会自动将分区命名为默认分区名称。
 
-默认情况下，默认分区的名称为__HIVE_DEFAULT_PARTITION__
+默认情况下，默认分区的名称为 __HIVE_DEFAULT_PARTITION__ 
 
 当然默认分区名称是可配置的
 
@@ -117,7 +117,8 @@ ON s.ymd = d.ymd AND s.symbol = d.symbol WHERE s.symbol = 'AAPL';
 
 set hive.auto.convert.join=true;
 SELECT s.ymd, s.symbol, s.price_close, d.dividend
-FROM stocks s JOIN dividends d ON s.ymd = d.ymd AND s.symbol = d.symbol > WHERE s.symbol = 'AAPL';
+FROM stocks s JOIN dividends d ON s.ymd = d.ymd AND s.symbol = d.symbol 
+WHERE s.symbol = 'AAPL';
 ```
 
 
@@ -149,6 +150,34 @@ return
 20181118,1
 ```
 
+八 特殊字符导致数据与字段错位
+```sql
+-- 特殊字符导致数据与字段错位
+\t：tab，跳格（移至下一列）
+\r：回车
+\n：换行
+
+select regexp_replace('\t abc \n def \r hij', '\n|\t|\r', '--');
+```
+
+
+九 Max block location exceeded for split   splitsize: 20 maxsize: 15
+
+```
+hive任务中间数据产生大量小文件，导致split超过了maxsize
+通过设置
+set mapreduce.job.max.split.locations=200000;
+
+This configuration is involved since MR v1. 
+It serves as an up limit for DN locations of job split which intend to protect the JobTracker from overloaded by jobs with huge numbers of split locations. 
+For YARN in Hadoop 2, this concern is lessened as we have per job AM instead of JT. 
+However, it will still impact RM as RM will potentially see heavy request from the AM which tries to obtain many localities for the split. With hitting this limit, it will truncate location number to given limit with sacrifice a bit data locality but get rid of the risk to hit bottleneck of RM.
+Depends on your job's priority (I believer it is a per job configuration now), you can leave it as a default (for lower or normal priority job) or increase to a larger number.
+Increase this value to larger than DN number will be the same impact as set it to DN's number.
+ 当 mapreduce.job.max.split.locations 设置大于DN的数量时，将和等于DN数量时的影响相同
+```
+
+
 十 outofmemoryError
 ```
 OOM  in mapper
@@ -169,5 +198,6 @@ set hive.mapjoin.optimized.hashtable=false;
 十三  org.apache.hadoop.hive.ql.plan.ConditionalWork cannot be cast to org.apache.hadoop.hive.ql.plan.MapredWork
 
 hive.ql.plan.ConditionalWork cannot be cast to hive.ql.plan.MapredWork
-
+``` sql
 SET hive.auto.convert.join.noconditionaltask=true;
+```
