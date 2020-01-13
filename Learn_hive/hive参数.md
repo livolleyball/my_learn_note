@@ -82,3 +82,17 @@ hive --hiveconf hive.fetch.task.conversion=more
   </description>
 </property>
 ``` 
+
+## set hive.cli.print.header=true;
+
+
+## 分区数据重载
+第一种情况：一层分区的情况
+
+        执行 MSCK REPAIR TABLE table_name;
+
+第二种情况：多层分区情况
+
+        执行 set hive.msck.path.validation=ignore;
+
+                MSCK REPAIR TABLE table_name;

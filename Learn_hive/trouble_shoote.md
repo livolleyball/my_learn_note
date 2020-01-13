@@ -166,7 +166,7 @@ select regexp_replace('\t abc \n def \r hij', '\n|\t|\r', '--');
 ```
 hive任务中间数据产生大量小文件，导致split超过了maxsize
 通过设置
-set mapreduce.job.max.split.locations=200000;
+set mapreduce.job.max.split.locations=100;
 
 This configuration is involved since MR v1. 
 It serves as an up limit for DN locations of job split which intend to protect the JobTracker from overloaded by jobs with huge numbers of split locations. 
@@ -200,4 +200,15 @@ set hive.mapjoin.optimized.hashtable=false;
 hive.ql.plan.ConditionalWork cannot be cast to hive.ql.plan.MapredWork
 ``` sql
 SET hive.auto.convert.join.noconditionaltask=true;
+```
+
+
+十四 Job Submission failed with exception 'java.io.IOException(Unable to close file 
+  because the last block BP-1418026952-10.200.200.7-1526660093855:blk_1106599924_32862496 does not have enough number of replicas.)'
+```sql
+not have enough number of replicas
+分析：
+可能是NameNode过于繁忙，locateFollowingBlock方法请求Name Node为文件添加新块发生错误，无法定位下一个块。建议增加locateFollowingBlock方法重试次数参
+解决办法：
+修改默认作业参数dfs.client.block.write.locateFollowingBlock.retries＝15 （默认是5)
 ```
