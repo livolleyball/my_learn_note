@@ -212,3 +212,24 @@ not have enough number of replicas
 解决办法：
 修改默认作业参数dfs.client.block.write.locateFollowingBlock.retries＝15 （默认是5)
 ```
+
+
+十五 Hive on tez的insert union 子目录的问题
+
+>最小分区文件夹下出现了二级目录 
+>tez对于insert union操作会进行优化，通过并行加快速度，为防止有相同文件输出，所以对并行的输出各自生成成了一个子目录，在子目录中存放结果。
+
+在Hive默认设置中，hive只能读取对应表目录下的文件，
+* ~~如果表目录中同时存在目录和文件~~
+  ~~则使用hive进行读取时，会报目录非文件的错误~~
+* ~~表目录中只有目录，hive不会进行深层递归查询，只会读取到对应查询目录，会查询结果为空~~
+* 表目录中只有文件，则可以正常查询
+```sql
+-- hive 开启mapreduce的递归查询模式：
+set mapreduce.input.fileinputformat.input.dir.recursive=true;
+
+-- impala  没有发现 recursive 参数
+-- hive impala tez 混用场景建议，union 之后复写目标表 
+-- 如果 将union部分嵌套为子查询,会被tez执行计划优化掉
+
+```
