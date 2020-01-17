@@ -79,7 +79,7 @@ set hive.groupby.mapaggr.checkinterval=100000;
 
 
 （6）count distinct优化
-优化前（只有一个reduce，先去重再count负担比较大）：
+优化前（只有一个reduce，是一个全聚合，先去重再count负担比较大）：
 select count(distinct id) from tablename;
 优化后（启动两个job，一个job负责子查询(可以有多个reduce)，另一个job负责count(1))：
 select count(1) from (select distinct id from tablename) tmp;
