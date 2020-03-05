@@ -43,7 +43,7 @@ set hive.skewjoin.key=100000;
 
 （2）mapjoin(map端执行join）
 启动方式一：(自动判断）
-set.hive.auto.convert.join=true;
+set hive.auto.convert.join=true;
 hive.mapjoin.smalltable.filesize 默认值是25mb
 小表小于25mb自动启动mapjoin
 启动方式二：(手动）
