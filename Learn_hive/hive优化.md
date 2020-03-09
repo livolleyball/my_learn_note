@@ -27,6 +27,9 @@ set hive.exec.max.dynamic.partitions.pernode = 1000; -- 根据实际情况调节
 分桶（不同文件）：
 set hive.enforce.bucketing=true;
 set hive.enforce.sorting=true;开启强制排序，插数据到表中会进行强制排序，默认false；
+select * from stu_buck tablesample(bucket 1 out of 4 on id);
+注:tablesample 是抽样语句，语法:TABLESAMPLE(BUCKET x OUT OF y) 。
+y 必须是 table 总 bucket 数的倍数或者因子。hive 根据 y 的大小，决定抽样的比例。例如，table 总共分了 4 份，当 y=2 时，抽取(4/2=)2 个 bucket 的数据，当 y=8 时，抽取(4/8=)1/2 个 bucket 的数据。
 ```
 
 三、Hive SQL优化
@@ -40,7 +43,7 @@ set hive.skewjoin.key=100000;
 
 （2）mapjoin(map端执行join）
 启动方式一：(自动判断）
-set.hive.auto.convert.join=true;
+set hive.auto.convert.join=true;
 hive.mapjoin.smalltable.filesize 默认值是25mb
 小表小于25mb自动启动mapjoin
 启动方式二：(手动）
@@ -76,7 +79,7 @@ set hive.groupby.mapaggr.checkinterval=100000;
 
 
 （6）count distinct优化
-优化前（只有一个reduce，先去重再count负担比较大）：
+优化前（只有一个reduce，是一个全聚合，先去重再count负担比较大）：
 select count(distinct id) from tablename;
 优化后（启动两个job，一个job负责子查询(可以有多个reduce)，另一个job负责count(1))：
 select count(1) from (select distinct id from tablename) tmp;
