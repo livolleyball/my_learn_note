@@ -46,8 +46,6 @@ select * from  oyo_tmp.dw_lihm_01;
 show locks oyo_tmp.dw_lihm_01;
 
 
-
-
 lock table  oyo_tmp.lihm_01  SHARED ; --共享锁 不可插入 DML （insert delete ）  ddl (create drop )
 show locks  oyo_tmp.lihm_01;
 select * from oyo_tmp.lihm_01;

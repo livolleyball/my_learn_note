@@ -94,5 +94,4 @@ hive --hiveconf hive.fetch.task.conversion=more
 第二种情况：多层分区情况
 
         执行 set hive.msck.path.validation=ignore;
-
                 MSCK REPAIR TABLE table_name;

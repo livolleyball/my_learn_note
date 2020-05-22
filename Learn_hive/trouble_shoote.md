@@ -233,3 +233,15 @@ set mapreduce.input.fileinputformat.input.dir.recursive=true;
 -- 如果 将union部分嵌套为子查询,会被tez执行计划优化掉
 
 ```
+
+十六 怎么知道某个节点卡主是因为hql问题还是集群资源问题
+https://www.cnblogs.com/datacloud/p/3596294.html
+如果集群规模不是很大，比如几台或者几十台
+1、当提交大量作业时，可能作业的AppMaster占住了所有的资源。那所有的作业都卡住了
+2、当一个较大的作业map跑完成，reduce启动，如果拉取数据超时，则map就会被重跑。如果资源不够，这个作业的appMaster就会释放reduce，释放后可能会被其它的作业占住，导致此作业的map长时间不能运行，reduce又占住了一部分的资源，感觉起来就是卡住了。
+
+解决问题的办法就是：
+如果卡住，把一些作业kill掉。
+
+控制提交作业的并发度，分queue保证资源
+查看任务以往的运行记录，如果平时时间短， 但是在 早高峰任务耗时较长
