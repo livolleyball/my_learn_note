@@ -204,3 +204,11 @@ where date_time = '2019-07-29'
 and user_id = '828598249005366892'
 order by `time` ) A
 ```
+
+
+```SQL
+select tb.*,regexp_extract(array_string, '(\\d+(\\.+\\d){1,})',1) from (
+  select array('Android 5.0.1 6.3','Android 5.3','8.1.3') as array_strings
+  from (select 1) a ) A  LATERAL VIEW  explode(array_strings) tb as array_string;
+
+```
