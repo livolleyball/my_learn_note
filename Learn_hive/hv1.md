@@ -220,3 +220,27 @@ select hive_udf.decode_url('https%3A%2F%2Fstatic.hotels.cn%2FwifiLanding%3Fhotel
 from (select 1) as t) AA 
 
 ```
+
+``` sql
+-- 在进行留存计算的时候 ，需注意 on 条件 产生的 笛卡尔积
+select  A.ds ,case when B.sdk_type is null then '全部'
+when B.sdk_type=1 then '安卓'
+when B.sdk_type=2 then 'IOS' else 'other' end as sdk_type,
+count(distinct udid) as cnt,
+sum(if(datediff(B.ds,A.ds)=0	,1,null)) 	as left_1d,
+sum(if(datediff(B.ds,A.ds)=1	,1,null)) 	as left_2d,
+sum(if(datediff(B.ds,A.ds)=2	,1,null)) 	as left_3d
+from
+(select udid,ds,group_id from sdk_game_new_device_wt
+where ds between  '2020-04-16' and '2020-06-01'
+group by udid,ds,group_id
+) A
+left join  (
+  select udid,ds,sdk_type,group_id
+              from   sdk_user_login_v2
+              where ds between '2020-04-16' and '2020-06-02'
+              group by udid,ds,sdk_type,group_id ) B 
+    on A.udid =B.udid and A.group_id= B.group_id and  A.ds <=B.ds
+group by A.ds,B.sdk_type
+grouping sets((A.ds),(A.ds,B.sdk_type))
+```

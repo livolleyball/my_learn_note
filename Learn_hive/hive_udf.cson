@@ -190,7 +190,7 @@ from dw.dim_enums
 
 
 
-```
+```sql
 select time ,user_id,search_method,
  group_flag,
     FIRST_VALUE(search_method) OVER(PARTITION BY group_flag ORDER BY time) AS last_search_method
@@ -207,6 +207,7 @@ order by `time` ) A
 
 
 ```SQL
+-- 匹配版本号
 select tb.*,regexp_extract(array_string, '(\\d+(\\.+\\d){1,})',1) from (
   select array('Android 5.0.1 6.3','Android 5.3','8.1.3') as array_strings
   from (select 1) a ) A  LATERAL VIEW  explode(array_strings) tb as array_string;
