@@ -231,13 +231,13 @@ sum(if(datediff(B.ds,A.ds)=0	,1,null)) 	as left_1d,
 sum(if(datediff(B.ds,A.ds)=1	,1,null)) 	as left_2d,
 sum(if(datediff(B.ds,A.ds)=2	,1,null)) 	as left_3d
 from
-(select udid,ds,group_id from sdk_game_new_device_wt
+(select udid,ds,group_id from tb1
 where ds between  '2020-04-16' and '2020-06-01'
 group by udid,ds,group_id
 ) A
 left join  (
   select udid,ds,sdk_type,group_id
-              from   sdk_user_login_v2
+              from   tb2
               where ds between '2020-04-16' and '2020-06-02'
               group by udid,ds,sdk_type,group_id ) B 
     on A.udid =B.udid and A.group_id= B.group_id and  A.ds <=B.ds
